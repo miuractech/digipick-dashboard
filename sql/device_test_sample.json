@@ -1,0 +1,42 @@
+[
+  {
+    "idx": 41,
+    "id": "7560e729-70b8-49b7-b1d9-ad1238ae7881",
+    "created_at": "2025-09-12 06:54:49.029195+00",
+    "updated_at": "2025-09-12 06:54:49.029195+00",
+    "folder_name": "Batch77",
+    "images": [
+      "https://owcanqgrymdruzdrttfo.supabase.co/storage/v1/object/public/images/607aecf5-5e45-4772-b7f2-c35d2f773f7b/Batch77/2025-09-12%2009%3A56%3A12.jpg"
+    ],
+    "device_id": "607aecf5-5e45-4772-b7f2-c35d2f773f7b",
+    "device_name": null,
+    "device_type": null,
+    "test_results": "{\"max\": [[74, 56, 130]], \"min\": [[74, 56, 130]], \"mean\": [[74.0, 56.0, 130.0]], \"range\": [[0, 0, 0]], \"result\": [[[74, 56, 130]]], \"variance\": [[0.0, 0.0, 0.0]], \"standard deviation\": [[0.0, 0.0, 0.0]]}",
+    "test_date": "2025-09-12 12:24:48.845909+00",
+    "test_status": "passed",
+    "upload_batch": "batch_1757660088",
+    "notes": null,
+    "metadata": "{\"device_id\": \"607aecf5-5e45-4772-b7f2-c35d2f773f7b\", \"image_urls\": [\"https://owcanqgrymdruzdrttfo.supabase.co/storage/v1/object/public/images/607aecf5-5e45-4772-b7f2-c35d2f773f7b/Batch77/2025-09-12%2009%3A56%3A12.jpg\"], \"device_name\": \"RVTESTDEV2\", \"device_type\": \"texture-pred\", \"folder_hash\": \"b3af9d35cec67ea82b3b0ee12fc6b8de\", \"total_images\": 1, \"files_processed\": [\"2025-09-12 09:56:12.jpg\", \"2025-09-12 09:56.pdf\", \"stats.json\"], \"upload_timestamp\": \"2025-09-12T12:24:48.845909\"}",
+    "data": null,
+    "data_type": "image_analysis"
+  },
+  {
+    "idx": 73,
+    "id": "d1d048d8-6c92-427a-89cb-a21667c4f960",
+    "created_at": "2025-09-11 07:25:10.170574+00",
+    "updated_at": "2025-09-11 07:25:10.170574+00",
+    "folder_name": "Batch71",
+    "images": ["2025-09-11 09:31:21.jpg", "2025-09-11 09:31:05.jpg"],
+    "device_id": "063bbb36-e3b5-4f39-9961-2379b3ec7df3",
+    "device_name": null,
+    "device_type": null,
+    "test_results": "{\"max\": [[76, 52, 128], [71, 53, 124]], \"min\": [[76, 52, 128], [71, 53, 124]], \"mean\": [[76.0, 52.0, 128.0], [71.0, 53.0, 124.0]], \"range\": [[0, 0, 0], [0, 0, 0]], \"result\": [[[76, 52, 128]], [[71, 53, 124]]], \"variance\": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], \"standard deviation\": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]}",
+    "test_date": "2025-09-11 12:55:09.949339+00",
+    "test_status": "passed",
+    "upload_batch": "batch_1757575509",
+    "notes": null,
+    "metadata": "{\"device_id\": \"063bbb36-e3b5-4f39-9961-2379b3ec7df3\", \"image_urls\": [\"2025-09-11 09:31:21.jpg\", \"2025-09-11 09:31:05.jpg\"], \"device_name\": \"TEST\", \"device_type\": \"image_analyzer\", \"folder_hash\": \"a837bbfc7fc1f172115b6817739c1220\", \"total_images\": 2, \"files_processed\": [\"2025-09-11 09:31:21.jpg\", \"2025-09-11 09:31:05.jpg\", \"stats.json\", \"2025-09-11 09:31.pdf\"], \"upload_timestamp\": \"2025-09-11T12:55:09.949339\"}",
+    "data": null,
+    "data_type": "image_analysis"
+  }
+]
