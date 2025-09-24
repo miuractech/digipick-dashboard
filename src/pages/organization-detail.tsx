@@ -72,8 +72,8 @@ export default function OrganizationDetailPage() {
   if (!organization) return <Alert color="red" title="Error">Organization not found</Alert>;
 
   return (
-    <Stack gap="md" p="md">
-      <Group justify="space-between">
+    <Stack gap="md" p={{ base: 'sm', md: 'md' }}>
+      <Group justify="space-between" style={{ flexWrap: 'wrap', gap: 'md' }}>
         <Group>
           <ActionIcon variant="subtle" onClick={handleBack}>
             <IconArrowLeft size={20} />
@@ -131,7 +131,7 @@ export default function OrganizationDetailPage() {
           <Divider />
 
           <Grid>
-            <Grid.Col span={6}>
+            <Grid.Col span={{ base: 12, md: 6 }}>
               <Stack gap="md">
                 <div>
                   <Text size="sm" fw={500} c="dimmed" mb={4}>Email</Text>
@@ -156,7 +156,7 @@ export default function OrganizationDetailPage() {
               </Stack>
             </Grid.Col>
 
-            <Grid.Col span={6}>
+            <Grid.Col span={{ base: 12, md: 6 }}>
               <Stack gap="md">
                 <div>
                   <Text size="sm" fw={500} c="dimmed" mb={4}>Address</Text>

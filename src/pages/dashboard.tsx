@@ -52,7 +52,7 @@ export default function Dashboard() {
 
         {/* Tabbed Interface with Pagination and Filters */}
         <Tabs defaultValue="expiring" variant="outline">
-          <Tabs.List>
+          <Tabs.List style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
             <Tabs.Tab 
               value="expiring" 
               leftSection={<IconAlertTriangle size={16} />}

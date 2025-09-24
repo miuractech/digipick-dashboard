@@ -209,7 +209,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
     <Stack gap="md">
       <Paper shadow="xs" p="md">
         <Stack gap="md">
-          <Group justify="space-between">
+          <Group justify="space-between" style={{ flexWrap: 'wrap', gap: 'md' }}>
             <Title order={3}>Devices</Title>
             <Button leftSection={<IconPlus size={16} />} onClick={openCreateModal}>
               Add Device
@@ -234,20 +234,21 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
               {loading ? 'Loading devices...' : 'No devices found'}
             </Text>
           ) : (
-            <Table striped highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Device Name</Table.Th>
-                  <Table.Th>Device ID</Table.Th>
-                  <Table.Th>AMC ID</Table.Th>
-                  <Table.Th>MAC Address</Table.Th>
-                  <Table.Th>Make/Model</Table.Th>
-                  <Table.Th>Warranty</Table.Th>
-                  <Table.Th>AMC Status</Table.Th>
-                  <Table.Th>Actions</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
+            <div style={{ overflowX: 'auto' }}>
+              <Table striped highlightOnHover style={{ minWidth: '1000px' }}>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Device Name</Table.Th>
+                    <Table.Th>Device ID</Table.Th>
+                    <Table.Th>AMC ID</Table.Th>
+                    <Table.Th>MAC Address</Table.Th>
+                    <Table.Th>Make/Model</Table.Th>
+                    <Table.Th>Warranty</Table.Th>
+                    <Table.Th>AMC Status</Table.Th>
+                    <Table.Th>Actions</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
                 {devices.map((device) => (
                   <Table.Tr key={device.id}>
                     <Table.Td>
@@ -356,7 +357,8 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   </Table.Tr>
                 ))}
               </Table.Tbody>
-            </Table>
+              </Table>
+            </div>
           )}
 
           {totalPages > 1 && (
@@ -377,11 +379,14 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
         onClose={() => setModalOpened(false)}
         title={editingDevice ? 'Edit Device' : 'Add New Device'}
         size="lg"
+        styles={{
+          body: { maxHeight: '80vh', overflowY: 'auto' }
+        }}
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack gap="md">
             <Grid>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <TextInput
                   label="Device Name"
                   placeholder="Enter device name"
@@ -389,7 +394,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   {...form.getInputProps('device_name')}
                 />
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <TextInput
                   label="AMC ID"
                   placeholder="Enter AMC ID"
@@ -405,14 +410,14 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
             />
 
             <Grid>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <TextInput
                   label="Make"
                   placeholder="Enter device make"
                   {...form.getInputProps('make')}
                 />
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <TextInput
                   label="Model"
                   placeholder="Enter device model"
@@ -428,7 +433,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
             />
 
             <Grid>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <DateInput
                   label="Purchase Date"
                   placeholder="Select purchase date"
@@ -437,7 +442,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   onChange={(date) => form.setFieldValue('purchase_date', date?.toISOString().split('T')[0] || '')}
                 />
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <DateInput
                   label="Warranty Expiry"
                   placeholder="Select warranty expiry date"
@@ -449,7 +454,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
             </Grid>
 
             <Grid>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <DateInput
                   label="AMC Start Date"
                   placeholder="Select AMC start date"
@@ -458,7 +463,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   onChange={(date) => form.setFieldValue('amc_start_date', date?.toISOString().split('T')[0] || '')}
                 />
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
                 <DateInput
                   label="AMC End Date"
                   placeholder="Select AMC end date"

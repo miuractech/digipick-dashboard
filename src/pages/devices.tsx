@@ -48,35 +48,37 @@ export default function Devices() {
   const totalPages = Math.ceil(devices.length / pageSize) || 1;
 
   return (
-    <Stack gap="md" p="md">
+    <Stack gap="md" p={{ base: 'sm', md: 'md' }}>
       <Group justify="space-between">
         <Title order={2}>Devices</Title>
       </Group>
       <Paper shadow="xs" p="md">
-        <Group gap="md" align="flex-end">
-          <TextInput
-            placeholder="Search devices..."
-            leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} />}
-            value={search}
-            onChange={e => {
-              setSearch(e.currentTarget.value);
-              setPage(1);
-            }}
-            style={{ flex: 1 }}
-          />
-          <Select
-            data={orgLoading ? [] : organizations.map(org => ({ value: org.id, label: org.name }))}
-            value={selectedOrg}
-            onChange={value => {
-              setSelectedOrg(value);
-              setPage(1);
-            }}
-            placeholder="All Organizations"
-            clearable
-            searchable
-            style={{ minWidth: 220 }}
-          />
-        </Group>
+        <Stack gap="md">
+          <Group gap="md" align="flex-end" style={{ flexWrap: 'wrap' }}>
+            <TextInput
+              placeholder="Search devices..."
+              leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} />}
+              value={search}
+              onChange={e => {
+                setSearch(e.currentTarget.value);
+                setPage(1);
+              }}
+              style={{ flex: 1, minWidth: 200 }}
+            />
+            <Select
+              data={orgLoading ? [] : organizations.map(org => ({ value: org.id, label: org.name }))}
+              value={selectedOrg}
+              onChange={value => {
+                setSelectedOrg(value);
+                setPage(1);
+              }}
+              placeholder="All Organizations"
+              clearable
+              searchable
+              style={{ minWidth: 220 }}
+            />
+          </Group>
+        </Stack>
       </Paper>
       {loading ? (
         <Loader size="lg" style={{ display: 'block', margin: '2rem auto' }} />
@@ -84,18 +86,19 @@ export default function Devices() {
         <Alert color="red" title="Error">{error}</Alert>
       ) : (
         <Paper shadow="xs" p="md">
-          <Table striped highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Device Name</Table.Th>
-                <Table.Th>Organization</Table.Th>
-                <Table.Th>MAC</Table.Th>
-                <Table.Th>Model</Table.Th>
-                <Table.Th>Warranty</Table.Th>
-                <Table.Th>AMC</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
+          <div style={{ overflowX: 'auto' }}>
+            <Table striped highlightOnHover style={{ minWidth: '800px' }}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Device Name</Table.Th>
+                  <Table.Th>Organization</Table.Th>
+                  <Table.Th>MAC</Table.Th>
+                  <Table.Th>Model</Table.Th>
+                  <Table.Th>Warranty</Table.Th>
+                  <Table.Th>AMC</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
               {paginatedDevices.length === 0 ? (
                 <Table.Tr>
                   <Table.Td colSpan={6}>
@@ -135,7 +138,8 @@ export default function Devices() {
                 ))
               )}
             </Table.Tbody>
-          </Table>
+            </Table>
+          </div>
           {totalPages > 1 && (
             <Group justify="center" mt="md">
               <Pagination

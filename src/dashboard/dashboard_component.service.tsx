@@ -9,13 +9,10 @@ import {
   ThemeIcon, 
   SimpleGrid,
   Loader,
-  Alert,
   ActionIcon,
   Tooltip,
   Pagination,
   TextInput,
-  Button,
-  Flex
 } from '@mantine/core';
 import { 
   IconBuilding, 
@@ -24,8 +21,7 @@ import {
   IconShieldOff, 
   IconAlertTriangle, 
   IconCalendarX,
-  IconRefresh,
-  IconEye,
+  IconRefresh,  
   IconSearch,
   IconFilter
 } from '@tabler/icons-react';
@@ -190,17 +186,18 @@ export function DeviceListTable({ devices, loading, title, emptyMessage }: Devic
 
   return (
     <Card withBorder radius="md">
-      <Table striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Device Name</Table.Th>
-            <Table.Th>Organization</Table.Th>
-            <Table.Th>AMC ID</Table.Th>
-            <Table.Th>AMC End Date</Table.Th>
-            <Table.Th>Status</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
+      <div style={{ overflowX: 'auto' }}>
+        <Table striped highlightOnHover style={{ minWidth: '600px' }}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Device Name</Table.Th>
+              <Table.Th>Organization</Table.Th>
+              <Table.Th>AMC ID</Table.Th>
+              <Table.Th>AMC End Date</Table.Th>
+              <Table.Th>Status</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
           {devices.map((device) => {
             const daysUntilExpiry = getDaysUntilExpiry(device.amc_end_date);
             let statusBadge;
@@ -246,7 +243,8 @@ export function DeviceListTable({ devices, loading, title, emptyMessage }: Devic
             );
           })}
         </Table.Tbody>
-      </Table>
+        </Table>
+      </div>
     </Card>
   );
 }
@@ -328,15 +326,16 @@ export function OrganizationDeviceCounts({ counts, loading }: OrganizationDevice
   return (
     <Card withBorder radius="md">
       <Text size="lg" fw={600} mb="md">Device Count by Organization</Text>
-      <Table striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Organization</Table.Th>
-            <Table.Th>Location</Table.Th>
-            <Table.Th>Device Count</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
+      <div style={{ overflowX: 'auto' }}>
+        <Table striped highlightOnHover style={{ minWidth: '500px' }}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Organization</Table.Th>
+              <Table.Th>Location</Table.Th>
+              <Table.Th>Device Count</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
           {counts
             .sort((a, b) => b.deviceCount - a.deviceCount)
             .map((item) => (
@@ -362,7 +361,8 @@ export function OrganizationDeviceCounts({ counts, loading }: OrganizationDevice
               </Table.Tr>
             ))}
         </Table.Tbody>
-      </Table>
+        </Table>
+      </div>
     </Card>
   );
 }
@@ -436,17 +436,18 @@ export function PaginatedDeviceTable({
           </Text>
         ) : (
           <>
-            <Table striped highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Device Name</Table.Th>
-                  <Table.Th>Organization</Table.Th>
-                  <Table.Th>AMC ID</Table.Th>
-                  <Table.Th>AMC End Date</Table.Th>
-                  <Table.Th>Status</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
+            <div style={{ overflowX: 'auto' }}>
+              <Table striped highlightOnHover style={{ minWidth: '700px' }}>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Device Name</Table.Th>
+                    <Table.Th>Organization</Table.Th>
+                    <Table.Th>AMC ID</Table.Th>
+                    <Table.Th>AMC End Date</Table.Th>
+                    <Table.Th>Status</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
                 {data.data.map((device) => {
                   const daysUntilExpiry = getDaysUntilExpiry(device.amc_end_date);
                   let statusBadge;
@@ -492,7 +493,8 @@ export function PaginatedDeviceTable({
                   );
                 })}
               </Table.Tbody>
-            </Table>
+              </Table>
+            </div>
 
             {/* Pagination */}
             <Group justify="space-between" mt="md">
@@ -554,15 +556,16 @@ export function PaginatedOrganizationTable({
           </Text>
         ) : (
           <>
-            <Table striped highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Organization</Table.Th>
-                  <Table.Th>Location</Table.Th>
-                  <Table.Th>Device Count</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
+            <div style={{ overflowX: 'auto' }}>
+              <Table striped highlightOnHover style={{ minWidth: '600px' }}>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Organization</Table.Th>
+                    <Table.Th>Location</Table.Th>
+                    <Table.Th>Device Count</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
                 {data.data.map((item) => (
                   <Table.Tr key={item.organization.id}>
                     <Table.Td>
@@ -586,7 +589,8 @@ export function PaginatedOrganizationTable({
                   </Table.Tr>
                 ))}
               </Table.Tbody>
-            </Table>
+              </Table>
+            </div>
 
             {/* Pagination */}
             <Group justify="space-between" mt="md">
