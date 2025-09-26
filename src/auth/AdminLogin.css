@@ -1,11 +1,51 @@
-.loginPaper {
-  transition: border-color 200ms ease, box-shadow 200ms ease;
-  border: 1px solid transparent;
+/* Custom styles for the new login design */
+.login-container {
+  min-height: 100vh;
 }
 
-.loginPaper:hover {
-  border-color: #2196f3;
-  box-shadow: 0 0 0 1px #2196f3 inset;
+.brand-section {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.form-section {
+  background-color: #f9fafb;
+}
+
+/* Social button icons */
+.social-icon {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+/* Input field styling */
+.login-input {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.login-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Button styling */
+.primary-button {
+  background-color: #2563eb;
+  transition: background-color 0.2s ease;
+}
+
+.primary-button:hover {
+  background-color: #1d4ed8;
+}
+
+.secondary-button {
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+  background-color: #eff6ff;
 }
 
 

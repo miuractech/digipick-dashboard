@@ -6,7 +6,6 @@ import type {
   DashboardStats, 
   DeviceWithOrganization, 
   OrganizationDeviceCount,
-  PaginationParams,
   PaginatedDeviceResponse,
   PaginatedOrganizationResponse,
   DeviceListFilters

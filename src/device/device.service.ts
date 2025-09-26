@@ -7,6 +7,16 @@ export const deviceService = {
   async getAll(filters?: DeviceFilters): Promise<Device[]> {
     let query = supabase.from(TABLE_NAME).select('*');
     
+    // By default, exclude archived devices unless specifically requested
+    if (filters?.include_archived) {
+      // Include both archived and non-archived
+    } else if (filters?.archived !== undefined) {
+      query = query.eq('archived', filters.archived);
+    } else {
+      // Default: exclude archived devices
+      query = query.eq('archived', false);
+    }
+    
     if (filters?.search) {
       query = query.or(`device_name.ilike.%${filters.search}%,amc_id.ilike.%${filters.search}%,mac_address.ilike.%${filters.search}%,make.ilike.%${filters.search}%,model.ilike.%${filters.search}%`);
     }
@@ -42,6 +52,16 @@ export const deviceService = {
     const to = from + pageSize - 1;
 
     let query = supabase.from(TABLE_NAME).select('*', { count: 'exact' });
+    
+    // By default, exclude archived devices unless specifically requested
+    if (filters?.include_archived) {
+      // Include both archived and non-archived
+    } else if (filters?.archived !== undefined) {
+      query = query.eq('archived', filters.archived);
+    } else {
+      // Default: exclude archived devices
+      query = query.eq('archived', false);
+    }
     
     // Apply filters
     if (filters?.search) {
@@ -101,6 +121,16 @@ export const deviceService = {
   async getByCompanyId(companyId: string, filters?: Omit<DeviceFilters, 'company_id'>): Promise<Device[]> {
     let query = supabase.from(TABLE_NAME).select('*').eq('company_id', companyId);
     
+    // By default, exclude archived devices unless specifically requested
+    if (filters?.include_archived) {
+      // Include both archived and non-archived
+    } else if (filters?.archived !== undefined) {
+      query = query.eq('archived', filters.archived);
+    } else {
+      // Default: exclude archived devices
+      query = query.eq('archived', false);
+    }
+    
     if (filters?.search) {
       query = query.or(`device_name.ilike.%${filters.search}%,amc_id.ilike.%${filters.search}%,mac_address.ilike.%${filters.search}%,make.ilike.%${filters.search}%,model.ilike.%${filters.search}%`);
     }
@@ -157,5 +187,29 @@ export const deviceService = {
       .eq('id', id);
     
     if (error) throw error;
+  },
+
+  async archive(id: string): Promise<Device> {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .update({ archived: true })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async unarchive(id: string): Promise<Device> {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .update({ archived: false })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   }
 };

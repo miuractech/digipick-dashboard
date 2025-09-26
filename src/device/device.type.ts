@@ -11,6 +11,7 @@ export interface Device {
   warranty_expiry_date?: string | null;
   amc_start_date?: string | null;
   amc_end_date?: string | null;
+  archived?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +28,7 @@ export interface CreateDeviceData {
   warranty_expiry_date?: string | null;
   amc_start_date?: string | null;
   amc_end_date?: string | null;
+  archived?: boolean;
 }
 
 export interface UpdateDeviceData extends Partial<Omit<CreateDeviceData, 'company_id'>> {
@@ -41,6 +43,8 @@ export interface DeviceFilters {
   make?: string;
   model?: string;
   company_id?: string;
+  archived?: boolean;
+  include_archived?: boolean;
 }
 
 export interface PaginationParams {

@@ -154,5 +154,43 @@ export const organizationService = {
     
     if (error) throw error;
     return data;
+  },
+
+  async exportToExcel(filters?: OrganizationFilters): Promise<Organization[]> {
+    let query = supabase.from(TABLE_NAME).select('*');
+    
+    // Apply same filters as getPaginated but without pagination
+    if (filters?.search) {
+      query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+    }
+    if (filters?.name) {
+      query = query.ilike('name', `%${filters.name}%`);
+    }
+    if (filters?.email) {
+      query = query.ilike('email', `%${filters.email}%`);
+    }
+    if (filters?.phone) {
+      query = query.ilike('phone', `%${filters.phone}%`);
+    }
+    if (filters?.city) {
+      query = query.ilike('city', `%${filters.city}%`);
+    }
+    if (filters?.state) {
+      query = query.ilike('state', `%${filters.state}%`);
+    }
+    if (filters?.country) {
+      query = query.eq('country', filters.country);
+    }
+    if (filters?.archived !== undefined) {
+      query = query.eq('archived', filters.archived);
+    }
+
+    // Apply limit of 500 records and order by created date
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .limit(500);
+    
+    if (error) throw error;
+    return data || [];
   }
 };

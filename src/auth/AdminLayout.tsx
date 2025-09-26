@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   AppShell,
   Burger,
@@ -11,26 +11,29 @@ import {
   Box,
   Center,
   Loader,
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
-import { 
-  IconSettings, 
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import {
+  IconSettings,
   IconLogout,
   IconUser,
   IconChevronDown,
   IconBuilding,
   IconDevices,
-  IconDashboard,
-  IconUsers
-} from '@tabler/icons-react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import authService from './authService';
-import type { AdminUser } from './auth';
-import LOGO from "../assets/logo.jpeg";
+  IconHome,
+  IconAlertTriangle,
+  IconTool,
+} from "@tabler/icons-react";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import authService from "./authService";
+import type { AdminUser } from "./auth";
+import LOGO from "../assets/logo.svg";
+import { theme } from "../theme";
 
 export default function AdminLayout() {
   const [opened, { toggle }] = useDisclosure();
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -40,13 +43,13 @@ export default function AdminLayout() {
     try {
       const currentUser = await authService.getCurrentUser();
       if (!currentUser) {
-        navigate('/admin/login');
+        navigate("/admin/login");
         return;
       }
       setUser(currentUser);
     } catch (error) {
-      console.error('Failed to load user:', error);
-      navigate('/admin/login');
+      console.error("Failed to load user:", error);
+      navigate("/admin/login");
     } finally {
       setIsLoading(false);
     }
@@ -60,17 +63,17 @@ export default function AdminLayout() {
     try {
       await authService.logout();
       notifications.show({
-        title: 'Logged Out',
-        message: 'You have been successfully logged out.',
-        color: 'blue',
+        title: "Logged Out",
+        message: "You have been successfully logged out.",
+        color: "blue",
       });
-      navigate('/admin/login');
+      navigate("/admin/login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       notifications.show({
-        title: 'Logout Error',
-        message: 'Failed to logout. Please try again.',
-        color: 'red',
+        title: "Logout Error",
+        message: "Failed to logout. Please try again.",
+        color: "red",
       });
     }
   };
@@ -90,13 +93,37 @@ export default function AdminLayout() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      withBorder={false}
+      navbar={{
+        width: 300,
+        breakpoint: "sm",
+        collapsed: { mobile: !opened, desktop: !desktopOpened },
+      }}
       padding="md"
     >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group>
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+            />
+            <Group>
+              <Burger
+                opened={opened}
+                onClick={toggle}
+                hiddenFrom="sm"
+                size="sm"
+              />
+              <Burger
+                opened={desktopOpened}
+                onClick={toggleDesktop}
+                visibleFrom="sm"
+                size="sm"
+              />
+            </Group>
             <Group gap="xs">
               <img src={LOGO} alt="Image Pick Logo" className="h-8" />
             </Group>
@@ -104,7 +131,10 @@ export default function AdminLayout() {
 
           <Menu shadow="md" width={200}>
             <Menu.Target>
-              <Button variant="subtle" rightSection={<IconChevronDown size={16} />}>
+              <Button
+                variant="subtle"
+                rightSection={<IconChevronDown size={16} />}
+              >
                 <Group gap="xs">
                   <Avatar size="sm" color="blue">
                     {user?.name.charAt(0).toUpperCase()}
@@ -123,7 +153,7 @@ export default function AdminLayout() {
                 Settings
               </Menu.Item>
               <Menu.Divider />
-              <Menu.Item 
+              <Menu.Item
                 leftSection={<IconLogout size={14} />}
                 color="red"
                 onClick={handleLogout}
@@ -137,53 +167,104 @@ export default function AdminLayout() {
 
       <AppShell.Navbar p="md">
         <Box mb="xl">
-          <Text size="sm" c="dimmed" mb="md">Navigation</Text>
-          
+       
+
           <NavLink
             label="Dashboard"
-            className='rounded-3xl'
-            leftSection={<IconDashboard size="1rem" />}
-            active={isActive('/admin/dashboard')}
-            onClick={() => navigate('/admin/dashboard')}
+            className="rounded-xl m-2 font-light"
+            style={{
+              padding: "12px",
+              fontSize: "18px",
+              backgroundColor: isActive("/admin/dashboard")
+                ? theme.colors?.primary?.[6]
+                : "transparent",
+              color: isActive("/admin/dashboard") ? "white" : "black",
+            }}
+            leftSection={<IconHome size="1rem" />}
+            active={isActive("/admin/dashboard")}
+            onClick={() => navigate("/admin/dashboard")}
           />
-          
+
           <NavLink
             label="Organization"
-            className='rounded-3xl'
+            className="rounded-xl m-2 font-light"
+            style={{ padding: "12px", fontSize: "18px",
+              backgroundColor: isActive("/admin/organization")
+                ? theme.colors?.primary?.[6]
+                : "transparent",
+              color: isActive("/admin/organization") ? "white" : "black",
+             }}
             leftSection={<IconBuilding size="1rem" />}
-            active={isActive('/admin/organization')}
-            onClick={() => navigate('/admin/organization')}
+            active={isActive("/admin/organization")}
+            onClick={() => navigate("/admin/organization")}
           />
-          
+
           <NavLink
             label="Devices"
-            className='rounded-3xl'
+            className="rounded-xl m-2 font-light"
+            style={{ padding: "12px", fontSize: "18px",
+              backgroundColor: isActive("/admin/devices")
+                ? theme.colors?.primary?.[6]
+                : "transparent",
+              color: isActive("/admin/devices") ? "white" : "black",
+            }}
             leftSection={<IconDevices size="1rem" />}
-            active={isActive('/admin/devices')}
-            onClick={() => navigate('/admin/devices')}
+            active={isActive("/admin/devices")}
+            onClick={() => navigate("/admin/devices")}
           />
-           <NavLink
-           label="Users"
-           className='rounded-3xl'
-           leftSection={<IconUsers size="1rem" />}
-           active={isActive('/admin/users')}
-           onClick={() => navigate('/admin/users')}
-           />
+          <NavLink
+            label="Service Request"
+            className="rounded-xl m-2 font-light"
+            style={{ padding: "12px", fontSize: "18px",
+              backgroundColor: isActive("/admin/service-request")
+                ? theme.colors?.primary?.[6]
+                : "transparent",
+              color: isActive("/admin/service-request") ? "white" : "black",
+            }}
+            leftSection={<IconAlertTriangle size="1rem" />}
+            active={isActive("/admin/service-request")}
+            onClick={() => navigate("/admin/service-request")}
+          />
+
+          <NavLink
+            label="Service Engineers"
+            className="rounded-xl m-2 font-light"
+            style={{ padding: "12px", fontSize: "18px",
+              backgroundColor: isActive("/admin/service-engineers")
+                ? theme.colors?.primary?.[6]
+                : "transparent",
+              color: isActive("/admin/service-engineers") ? "white" : "black",
+            }}
+            leftSection={<IconTool size="1rem" />}
+            active={isActive("/admin/service-engineers")}
+            onClick={() => navigate("/admin/service-engineers")}
+          />
         </Box>
 
         <Box mt="auto">
           <NavLink
-
             label="Settings"
-            className='rounded-3xl'
+            className="rounded-xl m-2 font-light"
+            style={{ padding: "12px", fontSize: "18px",
+              backgroundColor: isActive("/admin/settings")
+                ? theme.colors?.primary?.[6]
+                : "transparent",
+              color: isActive("/admin/settings") ? "white" : "black",
+            }}
             leftSection={<IconSettings size="1rem" />}
-            active={isActive('/admin/settings')}
-            onClick={() => navigate('/admin/settings')}
+            active={isActive("/admin/settings")}
+            onClick={() => navigate("/admin/settings")}
           />
-          
+
           <NavLink
             label="Logout"
-            className='rounded-3xl'
+            className="rounded-xl m-2 font-light"
+            style={{ padding: "12px", fontSize: "18px",
+              backgroundColor: isActive("/admin/logout")
+                ? theme.colors?.primary?.[6]
+                : "transparent",
+              color: isActive("/admin/logout") ? "white" : "black",
+            }}
             leftSection={<IconLogout size="1rem" />}
             color="red"
             onClick={handleLogout}
@@ -191,7 +272,7 @@ export default function AdminLayout() {
         </Box>
       </AppShell.Navbar>
 
-      <AppShell.Main>
+      <AppShell.Main className="bg-gray-50">
         <Outlet />
       </AppShell.Main>
     </AppShell>

@@ -11,6 +11,7 @@ create table public.devices (
   warranty_expiry_date date null,
   amc_start_date date null,
   amc_end_date date null,
+  archived boolean not null default false,
   created_at timestamp with time zone null default timezone ('utc'::text, now()),
   updated_at timestamp with time zone null default timezone ('utc'::text, now()),
   constraint devices_pkey primary key (id),
@@ -31,6 +32,8 @@ create index IF not exists idx_devices_device_name on public.devices using btree
 create index IF not exists idx_devices_mac_address on public.devices using btree (mac_address) TABLESPACE pg_default;
 
 create index IF not exists idx_devices_warranty_expiry on public.devices using btree (warranty_expiry_date) TABLESPACE pg_default;
+
+create index IF not exists idx_devices_archived on public.devices using btree (archived) TABLESPACE pg_default;
 
 create trigger trigger_update_devices_updated_at BEFORE
 update on devices for EACH row

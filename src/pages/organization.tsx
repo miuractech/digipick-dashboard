@@ -17,12 +17,14 @@ import {
   Menu,
   Pagination,
   Select,
-  Text
+  Text,
+  Card
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconEdit, IconArchive, IconPlus, IconRestore, IconDots, IconEye, IconSearch } from '@tabler/icons-react';
+import { IconEdit, IconArchive, IconPlus, IconRestore, IconDots, IconEye, IconSearch, IconDownload, IconPrinter, IconRefresh } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
-import { usePaginatedOrganizations, useOrganizationMutations } from '../organization/organization.hook';
+import { modals } from '@mantine/modals';
+import { usePaginatedOrganizations, useOrganizationMutations, useOrganizationExport } from '../organization/organization.hook';
 import type { Organization, CreateOrganizationData } from '../organization/organization.type';
 
 export default function OrganizationPage() {
@@ -68,6 +70,7 @@ export default function OrganizationPage() {
   } = usePaginatedOrganizations(archivedFilters, archivedPagination);
   
   const { createOrganization, updateOrganization, archiveOrganization, unarchiveOrganization, loading: mutationLoading } = useOrganizationMutations();
+  const { loading: exportLoading, exportToExcel } = useOrganizationExport();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
@@ -158,34 +161,77 @@ export default function OrganizationPage() {
   };
 
 
-  const handleArchive = async (id: string) => {
-    if (window.confirm('Are you sure you want to archive this organization?')) {
-      const result = await archiveOrganization(id);
-      if (result) {
-        notifications.show({
-          title: 'Success',
-          message: 'Organization archived successfully',
-          color: 'blue'
-        });
-        refetchActive();
-        refetchArchived();
-      }
-    }
+  const handleArchive = async (org: Organization) => {
+    modals.openConfirmModal({
+      title: 'Archive Organization',
+      children: (
+        <Stack gap="sm">
+          <Text size="sm">
+            Are you sure you want to archive the organization <strong>"{org.name}"</strong>?
+          </Text>
+          <Text size="sm" c="dimmed">
+            Archiving will:
+          </Text>
+          <ul style={{ margin: '0', paddingLeft: '1.2rem' }}>
+            <li><Text size="sm" c="dimmed">Hide this organization from active listings</Text></li>
+            <li><Text size="sm" c="dimmed">Prevent new service requests from being created</Text></li>
+            <li><Text size="sm" c="dimmed">Keep all existing data and history intact</Text></li>
+          </ul>
+          <Text size="sm" c="orange" fw={500}>
+            This action can be reversed by unarchiving the organization later.
+          </Text>
+        </Stack>
+      ),
+      labels: { confirm: 'Archive Organization', cancel: 'Cancel' },
+      confirmProps: { color: 'orange' },
+      onConfirm: async () => {
+        const result = await archiveOrganization(org.id);
+        if (result) {
+          notifications.show({
+            title: 'Success',
+            message: `Organization "${org.name}" archived successfully`,
+            color: 'blue'
+          });
+          refetchActive();
+          refetchArchived();
+        }
+      },
+    });
   };
 
-  const handleUnarchive = async (id: string) => {
-    if (window.confirm('Are you sure you want to unarchive this organization?')) {
-      const result = await unarchiveOrganization(id);
-      if (result) {
-        notifications.show({
-          title: 'Success',
-          message: 'Organization unarchived successfully',
-          color: 'green'
-        });
-        refetchActive();
-        refetchArchived();
-      }
-    }
+  const handleUnarchive = async (org: Organization) => {
+    modals.openConfirmModal({
+      title: 'Unarchive Organization',
+      children: (
+        <Stack gap="sm">
+          <Text size="sm">
+            Are you sure you want to unarchive the organization <strong>"{org.name}"</strong>?
+          </Text>
+          <Text size="sm" c="dimmed">
+            Unarchiving will:
+          </Text>
+          <ul style={{ margin: '0', paddingLeft: '1.2rem' }}>
+            <li><Text size="sm" c="dimmed">Make this organization visible in active listings</Text></li>
+            <li><Text size="sm" c="dimmed">Allow new service requests to be created</Text></li>
+            <li><Text size="sm" c="dimmed">Restore full functionality</Text></li>
+          </ul>
+        </Stack>
+      ),
+      labels: { confirm: 'Unarchive Organization', cancel: 'Cancel' },
+      confirmProps: { color: 'green' },
+      onConfirm: async () => {
+        const result = await unarchiveOrganization(org.id);
+        if (result) {
+          notifications.show({
+            title: 'Success',
+            message: `Organization "${org.name}" unarchived successfully`,
+            color: 'green'
+          });
+          refetchActive();
+          refetchArchived();
+        }
+      },
+    });
   };
 
   const handleViewDetails = (org: Organization) => {
@@ -208,25 +254,65 @@ export default function OrganizationPage() {
     }
   };
 
-  const currentLoading = activeTab === 'active' ? activeLoading : archivedLoading;
   const currentError = activeTab === 'active' ? activeError : archivedError;
+  const currentFilters = activeTab === 'active' ? activeFilters : archivedFilters;
+  const hasActiveFilters = Object.values(currentFilters).some(value => value !== undefined && value !== '');
 
-  if (currentLoading) return <Loader size="lg" style={{ display: 'block', margin: '2rem auto' }} />;
+  const handleExport = () => {
+    exportToExcel(currentFilters);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleRefresh = () => {
+    refetchActive();
+    refetchArchived();
+  };
+
   if (currentError) return <Alert color="red" title="Error">{currentError}</Alert>;
 
   return (
+    <Card>
     <Stack gap="md" p={{ base: 'sm', md: 'md' }}>
       <Group justify="space-between" style={{ flexWrap: 'wrap', gap: 'md' }}>
         <Title order={2}>Organizations</Title>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          onClick={() => setIsModalOpen(true)}
-        >
-          Add Organization
-        </Button>
+        <Group>
+          <Button
+            leftSection={<IconRefresh size={16} />}
+            variant="subtle"
+            onClick={handleRefresh}
+            loading={activeLoading || archivedLoading}
+          >
+            Refresh
+          </Button>
+          <Button
+            leftSection={<IconDownload size={16} />}
+            variant="outline"
+            onClick={handleExport}
+            loading={exportLoading}
+            title={hasActiveFilters ? "Export filtered results (max 500 records)" : "Export all organizations (max 500 records)"}
+          >
+            {hasActiveFilters ? "Export Filtered" : "Export Excel"}
+          </Button>
+          <Button
+            leftSection={<IconPrinter size={16} />}
+            variant="outline"
+            onClick={handlePrint}
+          >
+            Print
+          </Button>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            onClick={() => setIsModalOpen(true)}
+          >
+            Add Organization
+          </Button>
+        </Group>
       </Group>
 
-      <Paper shadow="xs" p="md" mb="md">
+      <Paper p="md" mb="md">
         <Group style={{ flexWrap: 'wrap', gap: 'md' }}>
           <TextInput
             leftSection={<IconSearch size={16} />}
@@ -248,9 +334,9 @@ export default function OrganizationPage() {
         </Tabs.List>
 
         <Tabs.Panel value="active" pt="md">
-          <Paper shadow="xs" p="md">
+          <Paper p="md">
             <div style={{ overflowX: 'auto' }}>
-              <Table striped highlightOnHover style={{ minWidth: '700px' }}>
+              <Table highlightOnHover style={{ minWidth: '700px' }}>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Name</Table.Th>
@@ -261,61 +347,75 @@ export default function OrganizationPage() {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                {activeOrgs.map((org) => (
-                  <Table.Tr key={org.id} style={{ cursor: 'pointer' }} onClick={() => handleViewDetails(org)}>
-                    <Table.Td>
-                      <div>
-                        <div style={{ fontWeight: 500 }}>{org.name}</div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}>
-                          {org.legal_name}
-                        </div>
-                      </div>
-                    </Table.Td>
-                    <Table.Td>{org.email}</Table.Td>
-                    <Table.Td>{org.phone}</Table.Td>
-                    <Table.Td>{org.city}</Table.Td>
-                    <Table.Td>
-                      <Menu shadow="md" width={200}>
-                        <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                            <IconDots size={16} />
-                          </ActionIcon>
-                        </Menu.Target>
-
-                        <Menu.Dropdown>
-                          <Menu.Item
-                            leftSection={<IconEye size={14} />}
-                            onClick={(e: React.MouseEvent) => {
-                              e.stopPropagation();
-                              handleViewDetails(org);
-                            }}
-                          >
-                            View Details
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconEdit size={14} />}
-                            onClick={(e: React.MouseEvent) => {
-                              e.stopPropagation();
-                              handleEdit(org);
-                            }}
-                          >
-                            Edit
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconArchive size={14} />}
-                            color="yellow"
-                            onClick={(e: React.MouseEvent) => {
-                              e.stopPropagation();
-                              handleArchive(org.id);
-                            }}
-                          >
-                            Archive
-                          </Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
+                {activeLoading ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                      <Loader size="md" />
                     </Table.Td>
                   </Table.Tr>
-                ))}
+                ) : activeOrgs.length === 0 ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--mantine-color-dimmed)' }}>
+                      No organizations found
+                    </Table.Td>
+                  </Table.Tr>
+                ) : (
+                  activeOrgs.map((org) => (
+                    <Table.Tr key={org.id} style={{ cursor: 'pointer' }} onClick={() => handleViewDetails(org)}>
+                      <Table.Td>
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{org.name}</div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}>
+                            {org.legal_name}
+                          </div>
+                        </div>
+                      </Table.Td>
+                      <Table.Td>{org.email}</Table.Td>
+                      <Table.Td>{org.phone}</Table.Td>
+                      <Table.Td>{org.city}</Table.Td>
+                      <Table.Td>
+                        <Menu shadow="md" width={200}>
+                          <Menu.Target>
+                            <ActionIcon variant="subtle" color="gray" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                              <IconDots size={16} />
+                            </ActionIcon>
+                          </Menu.Target>
+
+                          <Menu.Dropdown>
+                            <Menu.Item
+                              leftSection={<IconEye size={14} />}
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                handleViewDetails(org);
+                              }}
+                            >
+                              View Details
+                            </Menu.Item>
+                            <Menu.Item
+                              leftSection={<IconEdit size={14} />}
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                handleEdit(org);
+                              }}
+                            >
+                              Edit
+                            </Menu.Item>
+                            <Menu.Item
+                              leftSection={<IconArchive size={14} />}
+                              color="yellow"
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                handleArchive(org);
+                              }}
+                            >
+                              Archive
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))
+                )}
               </Table.Tbody>
               </Table>
             </div>
@@ -367,52 +467,66 @@ export default function OrganizationPage() {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                {archivedOrgs.map((org) => (
-                  <Table.Tr key={org.id} style={{ cursor: 'pointer' }} onClick={() => handleViewDetails(org)}>
-                    <Table.Td>
-                      <div>
-                        <div style={{ fontWeight: 500 }}>{org.name}</div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}>
-                          {org.legal_name}
-                        </div>
-                      </div>
-                    </Table.Td>
-                    <Table.Td>{org.email}</Table.Td>
-                    <Table.Td>{org.phone}</Table.Td>
-                    <Table.Td>{org.city}</Table.Td>
-                    <Table.Td>
-                      <Menu shadow="md" width={200}>
-                        <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                            <IconDots size={16} />
-                          </ActionIcon>
-                        </Menu.Target>
-
-                        <Menu.Dropdown>
-                          <Menu.Item
-                            leftSection={<IconEye size={14} />}
-                            onClick={(e: React.MouseEvent) => {
-                              e.stopPropagation();
-                              handleViewDetails(org);
-                            }}
-                          >
-                            View Details
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconRestore size={14} />}
-                            color="green"
-                            onClick={(e: React.MouseEvent) => {
-                              e.stopPropagation();
-                              handleUnarchive(org.id);
-                            }}
-                          >
-                            Unarchive
-                          </Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
+                {archivedLoading ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                      <Loader size="md" />
                     </Table.Td>
                   </Table.Tr>
-                ))}
+                ) : archivedOrgs.length === 0 ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--mantine-color-dimmed)' }}>
+                      No archived organizations found
+                    </Table.Td>
+                  </Table.Tr>
+                ) : (
+                  archivedOrgs.map((org) => (
+                    <Table.Tr key={org.id} style={{ cursor: 'pointer' }} onClick={() => handleViewDetails(org)}>
+                      <Table.Td>
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{org.name}</div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}>
+                            {org.legal_name}
+                          </div>
+                        </div>
+                      </Table.Td>
+                      <Table.Td>{org.email}</Table.Td>
+                      <Table.Td>{org.phone}</Table.Td>
+                      <Table.Td>{org.city}</Table.Td>
+                      <Table.Td>
+                        <Menu shadow="md" width={200}>
+                          <Menu.Target>
+                            <ActionIcon variant="subtle" color="gray" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                              <IconDots size={16} />
+                            </ActionIcon>
+                          </Menu.Target>
+
+                          <Menu.Dropdown>
+                            <Menu.Item
+                              leftSection={<IconEye size={14} />}
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                handleViewDetails(org);
+                              }}
+                            >
+                              View Details
+                            </Menu.Item>
+                            <Menu.Item
+                              leftSection={<IconRestore size={14} />}
+                              color="green"
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                handleUnarchive(org);
+                              }}
+                            >
+                              Unarchive
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))
+                )}
               </Table.Tbody>
               </Table>
             </div>
@@ -577,5 +691,6 @@ export default function OrganizationPage() {
         </form>
       </Modal>
     </Stack>
+    </Card>
   );
 }

@@ -1,5 +1,5 @@
 
-import { Container, Title, Stack, Alert, Space, Tabs } from '@mantine/core';
+import { Container, Title, Stack, Alert, Space, Tabs, Card } from '@mantine/core';
 import { IconInfoCircle, IconAlertTriangle, IconCalendarX } from '@tabler/icons-react';
 import { 
   useDashboardStats,
@@ -31,7 +31,12 @@ export default function Dashboard() {
   return (
     <Container size="xl" py="xl">
       <Stack gap="xl">
-        <Title order={1}>Dashboard</Title>
+      
+          <Title order={1}>
+
+          Welcome back, Admin!
+          </Title>
+ 
         
         {/* Statistics Grid */}
         <DashboardStatsGrid 
@@ -42,7 +47,19 @@ export default function Dashboard() {
             devicesInAMC: 0,
             devicesOutOfAMC: 0,
             devicesExpiringInSevenDays: 0,
-            devicesExpired: 0
+            devicesExpired: 0,
+            totalServiceRequests: 0,
+            pendingServiceRequests: 0,
+            completedServiceRequests: 0,
+            cancelledServiceRequests: 0,
+            serviceRequestsByType: {
+              demo_installation: 0,
+              repair: 0,
+              service: 0,
+              calibration: 0
+            },
+            averageServiceRequestsPerMonth: 0,
+            recentServiceRequests: 0
           }}
           loading={statsLoading}
           onRefresh={refetchStats}
@@ -51,12 +68,13 @@ export default function Dashboard() {
         <Space h="md" />
 
         {/* Tabbed Interface with Pagination and Filters */}
-        <Tabs defaultValue="expiring" variant="outline">
+        <Card p={'xl'} >
+        <Tabs defaultValue="expiring" variant="pills" color="primary">
           <Tabs.List style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
             <Tabs.Tab 
               value="expiring" 
               leftSection={<IconAlertTriangle size={16} />}
-              color="orange"
+              
             >
               Devices Expiring Soon ({stats?.devicesExpiringInSevenDays || 0})
             </Tabs.Tab>
@@ -94,6 +112,7 @@ export default function Dashboard() {
           </Tabs.Panel>
 
         </Tabs>
+        </Card>
       </Stack>
     </Container>
   );

@@ -30,6 +30,7 @@
     "@tiptap/pm": "^3.4.3",
     "@tiptap/react": "^3.4.3",
     "@tiptap/starter-kit": "^3.4.3",
+    "@types/xlsx": "^0.0.36",
     "dayjs": "^1.11.18",
     "embla-carousel": "^8.5.2",
     "embla-carousel-react": "^8.5.2",
@@ -38,6 +39,7 @@
     "react-router-dom": "^7.9.1",
     "recharts": "^3.2.1",
     "tailwindcss": "^4.1.13",
+    "xlsx": "^0.18.5",
     "yup": "^1.7.0"
   },
   "devDependencies": {

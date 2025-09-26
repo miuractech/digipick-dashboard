@@ -7,6 +7,7 @@ import './App.css'
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import '@mantine/dates/styles.css';
+import '@mantine/dropzone/styles.css';
 import { AuthProvider } from './auth/AuthContexttype';
 
 // Lazy load components
@@ -18,6 +19,8 @@ const OrganizationDetail = lazy(() => import('./pages/organization-detail'));
 const Devices = lazy(() => import('./pages/devices'));
 const Users = lazy(() => import('./pages/users'));
 const Settings = lazy(() => import('./pages/settings'));
+const ServiceRequest = lazy(() => import('./pages/service'));
+const ServiceEngineers = lazy(() => import('./pages/service-engineers'));
 
 const LoadingFallback = () => (
   <Center h="100vh">
@@ -45,6 +48,8 @@ function App() {
                 <Route path="organization/:id" element={<OrganizationDetail />} />
                 <Route path="devices" element={<Devices />} />
                 <Route path="users" element={<Users />} />
+                <Route path="service-request" element={<ServiceRequest />} />
+                <Route path="service-engineers" element={<ServiceEngineers />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
               {/* Catch all route */}

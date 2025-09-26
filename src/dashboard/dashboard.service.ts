@@ -1,10 +1,8 @@
 import supabase from '../supabase';
-import { deviceService } from '../device/device.service';
-import { organizationService } from '../organization/organization.service';
 import type { 
   DashboardStats, 
   DeviceWithOrganization, 
-  AMCStatus, 
+  AMCStatus,
   OrganizationDeviceCount,
   DashboardData,
   PaginationParams,
@@ -13,7 +11,6 @@ import type {
   DeviceListFilters
 } from './dashboard.type';
 import type { Device } from '../device/device.type';
-import type { Organization } from '../organization/organization.type';
 
 /**
  * Dashboard Service - Optimized for Scale
@@ -160,6 +157,7 @@ export const dashboardService = {
   async getDashboardStats(): Promise<DashboardStats> {
     const now = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // Run all queries in parallel for better performance
     const [
@@ -168,7 +166,17 @@ export const dashboardService = {
       devicesInAMCResult,
       devicesOutOfAMCResult,
       devicesExpiringResult,
-      devicesExpiredResult
+      devicesExpiredResult,
+      // Service Request Statistics
+      totalServiceRequestsResult,
+      pendingServiceRequestsResult,
+      completedServiceRequestsResult,
+      cancelledServiceRequestsResult,
+      demoInstallationResult,
+      repairResult,
+      serviceResult,
+      calibrationResult,
+      recentServiceRequestsResult
     ] = await Promise.all([
       // Count total organizations (non-archived)
       supabase
@@ -207,7 +215,61 @@ export const dashboardService = {
         .from('devices')
         .select('*', { count: 'exact', head: true })
         .not('amc_end_date', 'is', null)
-        .lt('amc_end_date', now)
+        .lt('amc_end_date', now),
+      
+      // Service Request Statistics
+      // Count total service requests
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true }),
+      
+      // Count pending service requests
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending'),
+      
+      // Count completed service requests
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'completed'),
+      
+      // Count cancelled service requests
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'cancelled'),
+      
+      // Count demo installation requests
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('service_type', 'demo_installation'),
+      
+      // Count repair requests
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('service_type', 'repair'),
+      
+      // Count service requests
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('service_type', 'service'),
+      
+      // Count calibration requests
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('service_type', 'calibration'),
+      
+      // Count recent service requests (last 30 days)
+      supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .gte('date_of_request', thirtyDaysAgo)
     ]);
 
     // Handle potential errors
@@ -217,6 +279,15 @@ export const dashboardService = {
     if (devicesOutOfAMCResult.error) throw devicesOutOfAMCResult.error;
     if (devicesExpiringResult.error) throw devicesExpiringResult.error;
     if (devicesExpiredResult.error) throw devicesExpiredResult.error;
+    if (totalServiceRequestsResult.error) throw totalServiceRequestsResult.error;
+    if (pendingServiceRequestsResult.error) throw pendingServiceRequestsResult.error;
+    if (completedServiceRequestsResult.error) throw completedServiceRequestsResult.error;
+    if (cancelledServiceRequestsResult.error) throw cancelledServiceRequestsResult.error;
+    if (demoInstallationResult.error) throw demoInstallationResult.error;
+    if (repairResult.error) throw repairResult.error;
+    if (serviceResult.error) throw serviceResult.error;
+    if (calibrationResult.error) throw calibrationResult.error;
+    if (recentServiceRequestsResult.error) throw recentServiceRequestsResult.error;
 
     const totalOrganizations = orgCountResult.count || 0;
     const totalDevices = deviceCountResult.count || 0;
@@ -225,9 +296,23 @@ export const dashboardService = {
     const devicesExpiringInSevenDays = devicesExpiringResult.count || 0;
     const devicesExpired = devicesExpiredResult.count || 0;
 
+    // Service Request Statistics
+    const totalServiceRequests = totalServiceRequestsResult.count || 0;
+    const pendingServiceRequests = pendingServiceRequestsResult.count || 0;
+    const completedServiceRequests = completedServiceRequestsResult.count || 0;
+    const cancelledServiceRequests = cancelledServiceRequestsResult.count || 0;
+    const demoInstallationCount = demoInstallationResult.count || 0;
+    const repairCount = repairResult.count || 0;
+    const serviceCount = serviceResult.count || 0;
+    const calibrationCount = calibrationResult.count || 0;
+    const recentServiceRequests = recentServiceRequestsResult.count || 0;
+
     const averageDevicesPerOrganization = totalOrganizations > 0 
       ? Math.round((totalDevices / totalOrganizations) * 100) / 100 
       : 0;
+
+    // Calculate average service requests per month (using total / 12 as an estimate)
+    const averageServiceRequestsPerMonth = Math.round((totalServiceRequests / 12) * 100) / 100;
 
     return {
       totalOrganizations,
@@ -236,7 +321,20 @@ export const dashboardService = {
       devicesInAMC,
       devicesOutOfAMC,
       devicesExpiringInSevenDays,
-      devicesExpired
+      devicesExpired,
+      // Service Request Statistics
+      totalServiceRequests,
+      pendingServiceRequests,
+      completedServiceRequests,
+      cancelledServiceRequests,
+      serviceRequestsByType: {
+        demo_installation: demoInstallationCount,
+        repair: repairCount,
+        service: serviceCount,
+        calibration: calibrationCount
+      },
+      averageServiceRequestsPerMonth,
+      recentServiceRequests
     };
   },
 

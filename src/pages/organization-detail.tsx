@@ -4,67 +4,28 @@ import {
   Paper,
   Title,
   Group,
-  Button,
   Grid,
   Text,
   Badge,
   Loader,
   Alert,
-  Divider,
   ActionIcon,
-  Menu
+  Tabs,
+  Card
 } from '@mantine/core';
-import { IconArrowLeft, IconEdit, IconArchive, IconRestore, IconDots } from '@tabler/icons-react';
-import { notifications } from '@mantine/notifications';
-import { useOrganization, useOrganizationMutations } from '../organization/organization.hook';
+import { IconArrowLeft, IconDevices, IconUsers } from '@tabler/icons-react';
+import { useOrganization } from '../organization/organization.hook';
 import { DeviceManagement } from '../device/device_component.service';
+import { UserManagement } from '../user/user_component.service';
 
 export default function OrganizationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  const { organization, loading, error, refetch } = useOrganization(id);
-  const { archiveOrganization, unarchiveOrganization } = useOrganizationMutations();
+  const { organization, loading, error } = useOrganization(id);
 
   const handleBack = () => {
     navigate('/admin/organization');
-  };
-
-  const handleEdit = () => {
-    navigate(`/admin/organization/${id}/edit`);
-  };
-
-
-  const handleArchive = async () => {
-    if (!organization) return;
-    
-    if (window.confirm('Are you sure you want to archive this organization?')) {
-      const result = await archiveOrganization(organization.id);
-      if (result) {
-        notifications.show({
-          title: 'Success',
-          message: 'Organization archived successfully',
-          color: 'blue'
-        });
-        refetch();
-      }
-    }
-  };
-
-  const handleUnarchive = async () => {
-    if (!organization) return;
-    
-    if (window.confirm('Are you sure you want to unarchive this organization?')) {
-      const result = await unarchiveOrganization(organization.id);
-      if (result) {
-        notifications.show({
-          title: 'Success',
-          message: 'Organization unarchived successfully',
-          color: 'green'
-        });
-        refetch();
-      }
-    }
   };
 
   if (loading) return <Loader size="lg" style={{ display: 'block', margin: '2rem auto' }} />;
@@ -78,13 +39,15 @@ export default function OrganizationDetailPage() {
           <ActionIcon variant="subtle" onClick={handleBack}>
             <IconArrowLeft size={20} />
           </ActionIcon>
-          <Title order={2}>Organization Details</Title>
+          <Title order={2}>{organization.name} {organization.legal_name && (
+              <Text c="dimmed" size="lg">{organization.legal_name}</Text>
+            )}</Title>
           {organization.archived && (
             <Badge color="yellow" variant="light">Archived</Badge>
           )}
         </Group>
 
-        <Menu shadow="md" width={200}>
+        {/* <Menu shadow="md" width={200}>
           <Menu.Target>
             <Button variant="outline" rightSection={<IconDots size={16} />}>
               Actions
@@ -116,19 +79,12 @@ export default function OrganizationDetailPage() {
               </Menu.Item>
             )}
           </Menu.Dropdown>
-        </Menu>
+        </Menu> */}
       </Group>
 
       <Paper shadow="xs" p="xl">
         <Stack gap="lg">
-          <div>
-            <Title order={3} mb="xs">{organization.name}</Title>
-            {organization.legal_name && (
-              <Text c="dimmed" size="lg">{organization.legal_name}</Text>
-            )}
-          </div>
-
-          <Divider />
+        
 
           <Grid>
             <Grid.Col span={{ base: 12, md: 6 }}>
@@ -185,7 +141,26 @@ export default function OrganizationDetailPage() {
         </Stack>
       </Paper>
 
-      <DeviceManagement companyId={organization.id} />
+<Card>
+      <Tabs defaultValue="devices" >
+        <Tabs.List>
+          <Tabs.Tab value="devices" leftSection={<IconDevices size="0.8rem" />}>
+            Devices
+          </Tabs.Tab>
+          <Tabs.Tab value="users" leftSection={<IconUsers size="0.8rem" />}>
+            Users
+          </Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="devices" pt="md">
+          <DeviceManagement companyId={organization.id} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="users" pt="md">
+          <UserManagement companyId={organization.id} />
+        </Tabs.Panel>
+      </Tabs>
+      </Card>
     </Stack>
   );
 }

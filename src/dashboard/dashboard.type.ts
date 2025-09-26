@@ -1,5 +1,5 @@
-import { Device } from '../device/device.type';
-import { Organization } from '../organization/organization.type';
+import type { Device } from '../device/device.type';
+import type { Organization } from '../organization/organization.type';
 
 export interface DashboardStats {
   totalOrganizations: number;
@@ -9,6 +9,19 @@ export interface DashboardStats {
   devicesOutOfAMC: number;
   devicesExpiringInSevenDays: number;
   devicesExpired: number;
+  // Service Request Statistics
+  totalServiceRequests: number;
+  pendingServiceRequests: number;
+  completedServiceRequests: number;
+  cancelledServiceRequests: number;
+  serviceRequestsByType: {
+    demo_installation: number;
+    repair: number;
+    service: number;
+    calibration: number;
+  };
+  averageServiceRequestsPerMonth: number;
+  recentServiceRequests: number; // Last 30 days
 }
 
 export interface DeviceWithOrganization extends Device {

@@ -157,10 +157,38 @@ export function useDeviceMutations() {
     }
   };
 
+  const archiveDevice = async (id: string): Promise<Device | null> => {
+    try {
+      setLoading(true);
+      const device = await deviceService.archive(id);
+      return device;
+    } catch (err) {
+      console.error('Error archiving device:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const unarchiveDevice = async (id: string): Promise<Device | null> => {
+    try {
+      setLoading(true);
+      const device = await deviceService.unarchive(id);
+      return device;
+    } catch (err) {
+      console.error('Error unarchiving device:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     createDevice,
     updateDevice,
     deleteDevice,
+    archiveDevice,
+    unarchiveDevice,
     loading
   };
 }

@@ -207,7 +207,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
 
   return (
     <Stack gap="md">
-      <Paper shadow="xs" p="md">
+      <Paper p="md">
         <Stack gap="md">
           <Group justify="space-between" style={{ flexWrap: 'wrap', gap: 'md' }}>
             <Title order={3}>Devices</Title>

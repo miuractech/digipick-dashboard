@@ -6,7 +6,6 @@ import {
   Button,
   Title,
   Text,
-  Container,
   Stack,
   LoadingOverlay,
   Anchor,
@@ -20,11 +19,12 @@ import {
   IconCheck,
   IconEye,
   IconEyeOff,
-  IconLock,
   IconMail,
+  IconBrandApple,
+  IconBrandGooglePlay,
+  IconDownload,
 } from "@tabler/icons-react";
-import LOGO from "../assets/logo.jpeg";
-import LandingImage from "../assets/logo.jpeg";
+import LOGO from "../assets/logo.svg";
 import "./AdminLogin.css";
 import { useNavigate } from "react-router-dom";
 import authService from "./authService";
@@ -149,71 +149,110 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br flex items-center justify-center p-4">
-      {/* Background Header */}
-      <Box className="fixed top-0 left-0 right-0  z-10 shadow-lg">
-        <Group p="sm" gap="md">
-          <img src={LOGO} alt="Image Pick Logo" className="h-8" />
-        </Group>
-      </Box>
+    <div className="min-h-screen flex">
+      {/* Left side - Blue brand section */}
+      <div className="hidden bg-gray-50 lg:flex lg:w-1/2 items-center justify-center p-12">
+        <div className="text-center text-white">
+          <div className="mb-8">
+            <img src={LOGO} alt="Image Pick Logo" className="h-24 mx-auto mb-6" />
+          </div>
+          <div className="text-xl opacity-90 font-light">
+            Admin Dashboard
+          </div>
+        </div>
+      </div>
 
-     <Container size="xl" mt={80} className="w-full max-w-6xl"> 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[600px] w-full ">
-          {/* Left side - Illustration/Image section */}
-         
-          <div>
-            <div className="rounded-3xl p-8 text-center relative overflow-hidden ">
-              <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
-              <div className="relative z-10">
-                <img
-                  src={LandingImage}
-                  alt="Movie production"
-                  className="w-full max-h-96 object-cover rounded-2xl mx-auto mb-6 shadow-lg"
-                  // style={{width:500}}
-                />
-               
-              </div>
-            </div>
+      {/* Right side - Login form */}
+      <div className="w-full lg:w-1/2 bg-[#4078c0] flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden text-center mb-8">
+            <img src={LOGO} alt="Image Pick Logo" className="h-16 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-800">Image Pick</h1>
           </div>
 
-          {/* Right side - Login form */}
-          <div>
-            <Paper
-              p="xl"
-              radius="lg"
-              maw={500}
-              mih={500}
-              mx="auto"
-              className="relative bg-white/95 backdrop-blur-sm border border-white/20"
-            >
-              <LoadingOverlay visible={isLoading} />
+          <Paper
+            p="xl"
+            radius="md"
+            className="bg-white shadow-lg"
+          >
+            <LoadingOverlay visible={isLoading} />
 
-              <Stack gap="lg">
-                {/* Header */}
-                <Box ta="center">
-                  <Title order={1}  fw={700} c="dark.9" mb="xl">
-                    <span className="text-blue-500">Welcome </span>to Image Pick
-                    <br />
-                    <span className="text-gray-600 text-lg">Admin Dashboard 🚀</span>
-                  </Title>
-                </Box>
+            <Stack gap="lg">
+              {/* Header */}
+              <Box ta="center" mb="md">
+                <Title order={2} fw={600} c="gray.8" mb="xs">
+                  Sign In
+                </Title>
+                <Text size="sm" c="gray.6">
+                  Sign In to you account
+                </Text>
+              </Box>
 
 
                 {!showForgotPassword ? (
                   /* Login Form */
                   <form onSubmit={loginForm.onSubmit(handleLogin)}>
                     <Stack gap="md">
+                      {/* App Download Buttons */}
+                      <Stack gap="xs" mb="md">
+                        <Button 
+                          variant="outline" 
+                          leftSection={<IconBrandApple size={20} />}
+                          className="border-gray-300 hover:bg-gray-50 text-gray-700"
+                          component="a"
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open('https://apps.apple.com/app/imagepick', '_blank');
+                          }}
+                        >
+                           Visit App Store
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          leftSection={<IconBrandGooglePlay size={20} />}
+                          className="border-gray-300 hover:bg-gray-50 text-gray-700"
+                          component="a"
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open('https://play.google.com/store/apps/details?id=com.imagepick', '_blank');
+                          }}
+                        >
+                          Visit Google Play
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          leftSection={<IconDownload size={20} />}
+                          className="border-gray-300 hover:bg-gray-50 text-gray-700"
+                          component="a"
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open('/downloads/imagepick-manual.pdf', '_blank');
+                          }}
+                        >
+                          Download Manual
+                        </Button>
+                      </Stack>
+
+                      <Text ta="center" c="gray.6" size="sm" my="md">
+                        Admin Login
+                      </Text>
+
                       <TextInput
-                        placeholder="What is your e-mail?"
-                        leftSection={<IconMail size={18} />}
+                        label="Email"
+                        placeholder="malualacan@gmail.com"
                         {...loginForm.getInputProps("email")}
                         disabled={isLoading}
                         size="md"
+                        className="[&_input]:bg-gray-50"
                       />
 
                       <PasswordInput
-                        placeholder="Enter your password"
-                        leftSection={<IconLock size={18} />}
+                        label="Password"
+                        placeholder="••••••••••"
                         visibilityToggleIcon={({ reveal }) =>
                           reveal ? (
                             <IconEyeOff size={18} />
@@ -224,72 +263,91 @@ export default function AdminLogin() {
                         {...loginForm.getInputProps("password")}
                         disabled={isLoading}
                         size="md"
+                        className="[&_input]:bg-gray-50"
                       />
+
+                      <Group justify="space-between" mt="xs" mb="md">
+                        <Group gap="xs">
+                          <input type="checkbox" id="remember" className="text-blue-600" />
+                          <Text size="sm" c="gray.6" component="label" htmlFor="remember">
+                            Remember me
+                          </Text>
+                        </Group>
+                        <Anchor
+                          size="sm"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="cursor-pointer text-blue-600 hover:text-blue-700"
+                        >
+                          Forgot Password?
+                        </Anchor>
+                      </Group>
 
                       <Button
                         type="submit"
                         fullWidth
-                        size="md"
+                        size="lg"
                         disabled={isLoading}
                         loading={isLoading}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                        radius="md"
                       >
-                        Continue
+                        Sign In
                       </Button>
-
-                      <Group justify="center" mt="md">
-                        <Text size="sm" c="dimmed">
-                          Unable to Log in?{" "}
-                          <Anchor
-                            size="sm"
-                            onClick={() => setShowForgotPassword(true)}
-                            className="cursor-pointer text-blue-600 hover:text-blue-700"
-                          >
-                            Reset Password
-                          </Anchor>
-                        </Text>
-                      </Group>
                     </Stack>
                   </form>
                 ) : (
                   /* Reset Password Form */
                   <form onSubmit={resetForm.onSubmit(handleForgotPassword)}>
                     <Stack gap="md">
-                      <Title order={3} ta="center" c="dark">
+                      <Title order={3} ta="center" c="gray.8" mb="xs">
                         Reset Password
                       </Title>
-                      <Text size="sm" c="dimmed" ta="center">
-                        Enter your email address and we'll send you a reset link
+                      <Text size="sm" c="gray.6" ta="center" mb="lg">
+                        Enter your email address and we'll send you a password reset link
                       </Text>
 
                       <TextInput
                         label="Email Address"
-                        placeholder="Enter your email"
+                        placeholder="Enter your admin email"
                         leftSection={<IconMail size={18} />}
                         {...resetForm.getInputProps("email")}
                         disabled={isLoading}
                         size="md"
+                        className="[&_input]:bg-gray-50"
+                        required
                       />
 
-                      <Group grow>
+                      <Stack gap="sm" mt="lg">
+                        <Button
+                          type="submit"
+                          fullWidth
+                          disabled={isLoading}
+                          loading={isLoading}
+                          size="lg"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                          radius="md"
+                        >
+                          {isLoading ? "Sending..." : "Send Reset Link"}
+                        </Button>
                         <Button
                           variant="outline"
-                          onClick={() => setShowForgotPassword(false)}
+                          fullWidth
+                          onClick={() => {
+                            setShowForgotPassword(false);
+                            resetForm.reset();
+                          }}
                           disabled={isLoading}
-                          size="md"
+                          size="lg"
+                          className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                          radius="md"
                         >
                           Back to Login
                         </Button>
-                        <Button
-                          type="submit"
-                          disabled={isLoading}
-                          loading={isLoading}
-                          size="md"
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          Send Reset Link
-                        </Button>
-                      </Group>
+                      </Stack>
+
+                      <Text size="xs" c="gray.5" ta="center" mt="md">
+                        Check your email for the reset link. It may take a few minutes to arrive.
+                      </Text>
                     </Stack>
                   </form>
                 )}
@@ -297,7 +355,7 @@ export default function AdminLogin() {
             </Paper>
           </div>
         </div>
-     </Container>
-    </div>
+      </div>
+  
   );
 }

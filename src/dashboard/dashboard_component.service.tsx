@@ -17,13 +17,16 @@ import {
 import { 
   IconBuilding, 
   IconDevices, 
-  IconShield, 
   IconShieldOff, 
   IconAlertTriangle, 
   IconCalendarX,
   IconRefresh,  
   IconSearch,
-  IconFilter
+  IconFilter,
+  IconTool,
+  IconClock,
+  IconCheck,
+  IconCalendar
 } from '@tabler/icons-react';
 import type { 
   DashboardStats, 
@@ -42,21 +45,85 @@ interface StatsCardProps {
 }
 
 export function StatsCard({ title, value, icon, color }: StatsCardProps) {
+  const getBackgroundColor = (color: string) => {
+    const colors = {
+      blue: '#FFE2E5',
+      yellow: '#FFF4DE',
+      green:"#DCFCE7",
+      cyan: '#e0f2f1',
+      teal: '#FFE2E5',
+      red: '#FFE2E5',
+      orange: '#FFE2E5',
+      purple: '#F3E8FF'
+    };
+    return colors[color as keyof typeof colors] || colors.blue;
+  };
+
+  const getIconColor = (color: string) => {
+    const colors = {
+      blue: '#FA5A7D',
+      yellow: '#FF947A',
+      green: '#3CD856',
+      cyan: '#00acc1',
+      teal: '#00796b',
+      red: '#FA5A7D',
+
+      orange: '#f57c00',
+      purple: '#BF83FF'
+    };
+    return colors[color as keyof typeof colors] || colors.blue;
+  };
+
   return (
-    <Card withBorder p="md" radius="md">
-      <Group justify="apart">
-        <div>
-          <Text c="dimmed" size="sm" fw={500} tt="uppercase">
-            {title}
-          </Text>
-          <Text fw={700} size="xl">
-            {value}
-          </Text>
-        </div>
-        <ThemeIcon color={color} variant="light" size={38} radius="md">
+    <Card 
+      p="xl" 
+      radius="lg" 
+      className={`transition-all shadow-none duration-300 cursor-pointer hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl`}
+      style={{ background: getBackgroundColor(color), borderColor: 'transparent' }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = getIconColor(color);
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'transparent';
+      }}
+    >
+      <Stack gap="lg">
+        <ThemeIcon 
+          size={60} 
+          radius="xl" 
+          style={{ 
+            backgroundColor: getIconColor(color),
+            color: 'white',
+            transition: 'all 0.3s ease',
+          }}
+        >
           {icon}
         </ThemeIcon>
-      </Group>
+        
+        <div>
+          <Text 
+            size="xl" 
+            fw={700} 
+            c="dark"
+            style={{ 
+              transition: 'all 0.3s ease',
+            }}
+          >
+            {value}
+          </Text>
+          <Text 
+            size="sm" 
+            fw={500} 
+            c="dimmed" 
+            mt={4}
+            style={{ 
+              transition: 'all 0.3s ease',
+            }}
+          >
+            {title}
+          </Text>
+        </div>
+      </Stack>
     </Card>
   );
 }
@@ -81,63 +148,78 @@ export function DashboardStatsGrid({ stats, loading, onRefresh }: DashboardStats
 
   return (
     <Stack gap="md">
+      <Card p="xl">
       <Group justify="space-between">
-        <Text size="xl" fw={700}>Dashboard Statistics</Text>
+        <Text size="xl" fw={700}>Analytics</Text>
         <Tooltip label="Refresh data">
           <ActionIcon variant="light" onClick={onRefresh} loading={loading}>
             <IconRefresh size={16} />
           </ActionIcon>
         </Tooltip>
       </Group>
-      
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+      <br />
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
         <StatsCard
           title="Total Organizations"
           value={stats.totalOrganizations}
-          icon={<IconBuilding size={24} />}
-          color="blue"
+          icon={<IconBuilding size={28} />}
+          color="green"
         />
+
         <StatsCard
           title="Total Devices"
           value={stats.totalDevices}
-          icon={<IconDevices size={24} />}
-          color="green"
+          icon={<IconDevices size={28} />}
+          color="yellow"
         />
-        <StatsCard
-          title="Avg Devices/Org"
-          value={stats.averageDevicesPerOrganization}
-          icon={<IconDevices size={24} />}
-          color="cyan"
-        />
-        <StatsCard
-          title="Devices in AMC"
-          value={stats.devicesInAMC}
-          icon={<IconShield size={24} />}
-          color="teal"
-        />
-      </SimpleGrid>
-      
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-        <StatsCard
+         <StatsCard
           title="Devices out of AMC"
           value={stats.devicesOutOfAMC}
-          icon={<IconShieldOff size={24} />}
+          icon={<IconShieldOff size={28} />}
           color="red"
         />
-        <StatsCard
+         <StatsCard
           title="Expiring in 7 Days"
           value={stats.devicesExpiringInSevenDays}
-          icon={<IconAlertTriangle size={24} />}
-          color="orange"
-        />
-        <StatsCard
-          title="AMC Expired"
-          value={stats.devicesExpired}
-          icon={<IconCalendarX size={24} />}
-          color="red"
+          icon={<IconAlertTriangle size={28} />}
+          color="purple"
         />
       </SimpleGrid>
-    </Stack>
+
+      {/* Service Request Statistics */}
+      <Text size="lg" fw={600} mt="xl" mb="md">Service Request Analytics</Text>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
+        <StatsCard
+          title="Total Service Requests"
+          value={stats.totalServiceRequests}
+          icon={<IconTool size={28} />}
+          color="blue"
+        />
+
+        <StatsCard
+          title="Pending Requests"
+          value={stats.pendingServiceRequests}
+          icon={<IconClock size={28} />}
+          color="orange"
+        />
+
+        <StatsCard
+          title="Completed Requests"
+          value={stats.completedServiceRequests}
+          icon={<IconCheck size={28} />}
+          color="green"
+        />
+
+        <StatsCard
+          title="Recent Requests (30 days)"
+          value={stats.recentServiceRequests}
+          icon={<IconCalendar size={28} />}
+          color="cyan"
+        />
+      </SimpleGrid>
+      </Card>
+      
+</Stack>
   );
 }
 
@@ -402,7 +484,7 @@ export function PaginatedDeviceTable({
   };
 
   return (
-    <Card withBorder radius="md">
+    <Card  radius="md">
       <Stack gap="md">
         {/* Search and Filter Controls */}
         <Group justify="space-between">
