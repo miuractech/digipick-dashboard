@@ -13,7 +13,14 @@ import {
   Tooltip,
   Pagination,
   TextInput,
+  Modal,
+  Button,
+  Textarea,
+  Divider,
+  Code
 } from '@mantine/core';
+import { useDisclosure, useClipboard } from '@mantine/hooks';
+import React, { useState } from 'react';
 import { 
   IconBuilding, 
   IconDevices, 
@@ -26,7 +33,11 @@ import {
   IconTool,
   IconClock,
   IconCheck,
-  IconCalendar
+  IconCalendar,
+  IconPhone,
+  IconMail,
+  IconCopy,
+  IconExternalLink
 } from '@tabler/icons-react';
 import type { 
   DashboardStats, 
@@ -36,6 +47,264 @@ import type {
   PaginatedOrganizationResponse,
   DeviceListFilters
 } from './dashboard.type';
+
+// Email templates for AMC notifications
+const getEmailTemplate = (device: DeviceWithOrganization, isExpired: boolean) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Not specified';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const subject = isExpired 
+    ? `URGENT: AMC Expired for ${device.device_name} - Renewal Required`
+    : `REMINDER: AMC Expiring Soon for ${device.device_name} - Action Required`;
+
+  const content = isExpired 
+    ? `Dear ${device.organization.name} Team,
+
+I hope this email finds you well.
+
+This is to inform you that the Annual Maintenance Contract (AMC) for your device has expired and requires immediate attention:
+
+Device Details:
+• Device Name: ${device.device_name}
+• AMC ID: ${device.amc_id || 'Not specified'}
+• Make/Model: ${device.make && device.model ? `${device.make} ${device.model}` : 'Not specified'}
+• AMC Expiry Date: ${formatDate(device.amc_end_date)}
+
+Your device is currently not covered under AMC, which means:
+- No technical support coverage
+- No preventive maintenance services
+- Potential warranty void for repairs
+
+To ensure uninterrupted service and support, please contact us immediately to renew your AMC.
+
+Contact Information:
+- Phone: [Your Phone Number]
+- Email: [Your Email]
+
+We would be happy to discuss renewal options and provide competitive pricing for continued support.
+
+Thank you for your prompt attention to this matter.
+
+Best regards,
+[Your Name]
+[Your Company]`
+    : `Dear ${device.organization.name} Team,
+
+I hope this email finds you well.
+
+This is a friendly reminder that the Annual Maintenance Contract (AMC) for your device is approaching its expiry date:
+
+Device Details:
+• Device Name: ${device.device_name}
+• AMC ID: ${device.amc_id || 'Not specified'}
+• Make/Model: ${device.make && device.model ? `${device.make} ${device.model}` : 'Not specified'}
+• AMC Expiry Date: ${formatDate(device.amc_end_date)}
+
+To ensure uninterrupted service and support, we recommend renewing your AMC before the expiry date. This will ensure:
+- Continued technical support coverage
+- Regular preventive maintenance services
+- Priority response for any issues
+
+Contact Information:
+- Phone: [Your Phone Number]
+- Email: [Your Email]
+
+Please reach out to us at your earliest convenience to discuss renewal options and pricing.
+
+Thank you for your continued trust in our services.
+
+Best regards,
+[Your Name]
+[Your Company]`;
+
+  return { subject, content };
+};
+
+// Contact Modal Component
+interface ContactModalProps {
+  device: DeviceWithOrganization | null;
+  opened: boolean;
+  onClose: () => void;
+  isExpired?: boolean;
+}
+
+export function ContactModal({ device, opened, onClose, isExpired = false }: ContactModalProps) {
+  const [emailTemplate, setEmailTemplate] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const clipboard = useClipboard({ timeout: 2000 });
+
+  // Update email template when device changes
+  React.useEffect(() => {
+    if (device) {
+      const template = getEmailTemplate(device, isExpired);
+      setEmailTemplate(template.content);
+      setEmailSubject(template.subject);
+    }
+  }, [device, isExpired]);
+
+  if (!device) return null;
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Not set';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const openEmailClient = () => {
+    const mailto = `mailto:${device.organization.email || ''}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailTemplate)}`;
+    window.open(mailto, '_self');
+  };
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={
+        <Group>
+          <IconMail size={20} />
+          <Text fw={600}>Contact Organization</Text>
+        </Group>
+      }
+      size="lg"
+      centered
+    >
+      <Stack gap="md">
+        {/* Organization Details */}
+        <Card withBorder p="md">
+          <Stack gap="sm">
+            <Text fw={600} size="lg">{device.organization.name}</Text>
+            <Group gap="xs">
+              <Text fw={500}>Email:</Text>
+              {device.organization.email ? (
+                <Code>{device.organization.email}</Code>
+              ) : (
+                <Text c="dimmed">Not available</Text>
+              )}
+            </Group>
+            <Group gap="xs">
+              <Text fw={500}>Phone:</Text>
+              {device.organization.phone ? (
+                <Group gap="xs">
+                  <Code>{device.organization.phone}</Code>
+                  <ActionIcon
+                    variant="light"
+                    color="blue"
+                    size="sm"
+                    onClick={() => window.open(`tel:${device.organization.phone}`, '_self')}
+                  >
+                    <IconPhone size={14} />
+                  </ActionIcon>
+                </Group>
+              ) : (
+                <Text c="dimmed">Not available</Text>
+              )}
+            </Group>
+            {device.organization.city && (
+              <Group gap="xs">
+                <Text fw={500}>Location:</Text>
+                <Text>{device.organization.city}{device.organization.state ? `, ${device.organization.state}` : ''}</Text>
+              </Group>
+            )}
+          </Stack>
+        </Card>
+
+        {/* Device Details */}
+        <Card withBorder p="md">
+          <Stack gap="sm">
+            <Text fw={600}>Device Information</Text>
+            <Group gap="xs">
+              <Text fw={500}>Device:</Text>
+              <Text>{device.device_name}</Text>
+            </Group>
+            <Group gap="xs">
+              <Text fw={500}>AMC ID:</Text>
+              <Text>{device.amc_id || 'Not set'}</Text>
+            </Group>
+            <Group gap="xs">
+              <Text fw={500}>AMC End Date:</Text>
+              <Text c={isExpired ? 'red' : 'orange'}>{formatDate(device.amc_end_date)}</Text>
+            </Group>
+          </Stack>
+        </Card>
+
+        <Divider />
+
+        {/* Email Template */}
+        <Stack gap="sm">
+          <Group justify="space-between">
+            <Text fw={600}>Email Template</Text>
+            <Badge color={isExpired ? 'red' : 'orange'}>
+              {isExpired ? 'Expired AMC' : 'Expiring Soon'}
+            </Badge>
+          </Group>
+
+          {/* Email Subject */}
+          <TextInput
+            label="Subject"
+            value={emailSubject}
+            onChange={(e) => setEmailSubject(e.target.value)}
+            rightSection={
+              <ActionIcon
+                variant="light"
+                onClick={() => clipboard.copy(emailSubject)}
+                color={clipboard.copied ? 'green' : 'blue'}
+              >
+                <IconCopy size={16} />
+              </ActionIcon>
+            }
+          />
+
+          {/* Email Content */}
+          <Textarea
+            label="Email Content"
+            value={emailTemplate}
+            onChange={(e) => setEmailTemplate(e.target.value)}
+            rows={12}
+            rightSection={
+              <ActionIcon
+                variant="light"
+                onClick={() => clipboard.copy(emailTemplate)}
+                color={clipboard.copied ? 'green' : 'blue'}
+                style={{ marginTop: 8 }}
+              >
+                <IconCopy size={16} />
+              </ActionIcon>
+            }
+          />
+
+          <Group justify="flex-end" mt="md">
+            <Button
+              variant="light"
+              leftSection={<IconCopy size={16} />}
+              onClick={() => clipboard.copy(`Subject: ${emailSubject}\n\n${emailTemplate}`)}
+              color={clipboard.copied ? 'green' : 'blue'}
+            >
+              {clipboard.copied ? 'Copied!' : 'Copy All'}
+            </Button>
+            
+            {device.organization.email && (
+              <Button
+                leftSection={<IconExternalLink size={16} />}
+                onClick={openEmailClient}
+              >
+                Open in Email Client
+              </Button>
+            )}
+          </Group>
+        </Stack>
+      </Stack>
+    </Modal>
+  );
+}
 
 interface StatsCardProps {
   title: string;
@@ -231,6 +500,15 @@ interface DeviceListTableProps {
 }
 
 export function DeviceListTable({ devices, loading, title, emptyMessage }: DeviceListTableProps) {
+  const [opened, { open, close }] = useDisclosure(false);
+  const [selectedDevice, setSelectedDevice] = useState<DeviceWithOrganization | null>(null);
+  const [isExpiredDevice, setIsExpiredDevice] = useState(false);
+
+  const openContactModal = (device: DeviceWithOrganization, isExpired: boolean) => {
+    setSelectedDevice(device);
+    setIsExpiredDevice(isExpired);
+    open();
+  };
   if (loading) {
     return (
       <Card withBorder p="xl" radius="md">
@@ -269,7 +547,7 @@ export function DeviceListTable({ devices, loading, title, emptyMessage }: Devic
   return (
     <Card withBorder radius="md">
       <div style={{ overflowX: 'auto' }}>
-        <Table striped highlightOnHover style={{ minWidth: '600px' }}>
+        <Table striped highlightOnHover style={{ minWidth: '650px' }}>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Device Name</Table.Th>
@@ -277,6 +555,7 @@ export function DeviceListTable({ devices, loading, title, emptyMessage }: Devic
               <Table.Th>AMC ID</Table.Th>
               <Table.Th>AMC End Date</Table.Th>
               <Table.Th>Status</Table.Th>
+              <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -321,12 +600,53 @@ export function DeviceListTable({ devices, loading, title, emptyMessage }: Devic
                 <Table.Td>
                   {statusBadge}
                 </Table.Td>
+                <Table.Td>
+                  <Group gap="xs">
+                    {/* Phone Call Button */}
+                    {device.organization.phone ? (
+                      <Tooltip label={`Call ${device.organization.name}: ${device.organization.phone}`}>
+                        <ActionIcon
+                          variant="light"
+                          color="blue"
+                          onClick={() => window.open(`tel:${device.organization.phone}`, '_self')}
+                        >
+                          <IconPhone size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip label="No phone number available">
+                        <ActionIcon variant="light" color="gray" disabled>
+                          <IconPhone size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                    
+                    {/* Email Contact Button */}
+                    <Tooltip label="Contact via email">
+                      <ActionIcon
+                        variant="light"
+                        color="green"
+                        onClick={() => openContactModal(device, daysUntilExpiry !== null && daysUntilExpiry < 0)}
+                      >
+                        <IconMail size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+                </Table.Td>
               </Table.Tr>
             );
           })}
         </Table.Tbody>
         </Table>
       </div>
+      
+      {/* Contact Modal */}
+      <ContactModal
+        device={selectedDevice}
+        opened={opened}
+        onClose={close}
+        isExpired={isExpiredDevice}
+      />
     </Card>
   );
 }
@@ -469,6 +789,15 @@ export function PaginatedDeviceTable({
   onFiltersChange,
   onPageChange
 }: PaginatedDeviceTableProps) {
+  const [opened, { open, close }] = useDisclosure(false);
+  const [selectedDevice, setSelectedDevice] = useState<DeviceWithOrganization | null>(null);
+  const [isExpiredDevice, setIsExpiredDevice] = useState(false);
+
+  const openContactModal = (device: DeviceWithOrganization, isExpired: boolean) => {
+    setSelectedDevice(device);
+    setIsExpiredDevice(isExpired);
+    open();
+  };
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString();
@@ -519,7 +848,7 @@ export function PaginatedDeviceTable({
         ) : (
           <>
             <div style={{ overflowX: 'auto' }}>
-              <Table striped highlightOnHover style={{ minWidth: '700px' }}>
+              <Table striped highlightOnHover style={{ minWidth: '750px' }}>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Device Name</Table.Th>
@@ -527,6 +856,7 @@ export function PaginatedDeviceTable({
                     <Table.Th>AMC ID</Table.Th>
                     <Table.Th>AMC End Date</Table.Th>
                     <Table.Th>Status</Table.Th>
+                    <Table.Th>Actions</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -571,6 +901,39 @@ export function PaginatedDeviceTable({
                       <Table.Td>
                         {statusBadge}
                       </Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
+                          {/* Phone Call Button */}
+                          {device.organization.phone ? (
+                            <Tooltip label={`Call ${device.organization.name}: ${device.organization.phone}`}>
+                              <ActionIcon
+                                variant="light"
+                                color="blue"
+                                onClick={() => window.open(`tel:${device.organization.phone}`, '_self')}
+                              >
+                                <IconPhone size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip label="No phone number available">
+                              <ActionIcon variant="light" color="gray" disabled>
+                                <IconPhone size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                          )}
+                          
+                          {/* Email Contact Button */}
+                          <Tooltip label="Contact via email">
+                            <ActionIcon
+                              variant="light"
+                              color="green"
+                              onClick={() => openContactModal(device, daysUntilExpiry !== null && daysUntilExpiry < 0)}
+                            >
+                              <IconMail size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                        </Group>
+                      </Table.Td>
                     </Table.Tr>
                   );
                 })}
@@ -592,6 +955,14 @@ export function PaginatedDeviceTable({
             </Group>
           </>
         )}
+        
+        {/* Contact Modal */}
+        <ContactModal
+          device={selectedDevice}
+          opened={opened}
+          onClose={close}
+          isExpired={isExpiredDevice}
+        />
       </Stack>
     </Card>
   );

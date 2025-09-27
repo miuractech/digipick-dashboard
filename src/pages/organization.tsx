@@ -23,7 +23,6 @@ import {
 import { useForm } from '@mantine/form';
 import { IconEdit, IconArchive, IconPlus, IconRestore, IconDots, IconEye, IconSearch, IconDownload, IconPrinter, IconRefresh } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
-import { modals } from '@mantine/modals';
 import { usePaginatedOrganizations, useOrganizationMutations, useOrganizationExport } from '../organization/organization.hook';
 import type { Organization, CreateOrganizationData } from '../organization/organization.type';
 
@@ -74,6 +73,9 @@ export default function OrganizationPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [isUnarchiveModalOpen, setIsUnarchiveModalOpen] = useState(false);
+  const [orgToArchive, setOrgToArchive] = useState<Organization | null>(null);
 
   const form = useForm<CreateOrganizationData>({
     initialValues: {
@@ -161,77 +163,48 @@ export default function OrganizationPage() {
   };
 
 
-  const handleArchive = async (org: Organization) => {
-    modals.openConfirmModal({
-      title: 'Archive Organization',
-      children: (
-        <Stack gap="sm">
-          <Text size="sm">
-            Are you sure you want to archive the organization <strong>"{org.name}"</strong>?
-          </Text>
-          <Text size="sm" c="dimmed">
-            Archiving will:
-          </Text>
-          <ul style={{ margin: '0', paddingLeft: '1.2rem' }}>
-            <li><Text size="sm" c="dimmed">Hide this organization from active listings</Text></li>
-            <li><Text size="sm" c="dimmed">Prevent new service requests from being created</Text></li>
-            <li><Text size="sm" c="dimmed">Keep all existing data and history intact</Text></li>
-          </ul>
-          <Text size="sm" c="orange" fw={500}>
-            This action can be reversed by unarchiving the organization later.
-          </Text>
-        </Stack>
-      ),
-      labels: { confirm: 'Archive Organization', cancel: 'Cancel' },
-      confirmProps: { color: 'orange' },
-      onConfirm: async () => {
-        const result = await archiveOrganization(org.id);
-        if (result) {
-          notifications.show({
-            title: 'Success',
-            message: `Organization "${org.name}" archived successfully`,
-            color: 'blue'
-          });
-          refetchActive();
-          refetchArchived();
-        }
-      },
-    });
+  const handleArchive = (org: Organization) => {
+    setOrgToArchive(org);
+    setIsArchiveModalOpen(true);
   };
 
-  const handleUnarchive = async (org: Organization) => {
-    modals.openConfirmModal({
-      title: 'Unarchive Organization',
-      children: (
-        <Stack gap="sm">
-          <Text size="sm">
-            Are you sure you want to unarchive the organization <strong>"{org.name}"</strong>?
-          </Text>
-          <Text size="sm" c="dimmed">
-            Unarchiving will:
-          </Text>
-          <ul style={{ margin: '0', paddingLeft: '1.2rem' }}>
-            <li><Text size="sm" c="dimmed">Make this organization visible in active listings</Text></li>
-            <li><Text size="sm" c="dimmed">Allow new service requests to be created</Text></li>
-            <li><Text size="sm" c="dimmed">Restore full functionality</Text></li>
-          </ul>
-        </Stack>
-      ),
-      labels: { confirm: 'Unarchive Organization', cancel: 'Cancel' },
-      confirmProps: { color: 'green' },
-      onConfirm: async () => {
-        const result = await unarchiveOrganization(org.id);
-        if (result) {
-          notifications.show({
-            title: 'Success',
-            message: `Organization "${org.name}" unarchived successfully`,
-            color: 'green'
-          });
-          refetchActive();
-          refetchArchived();
-        }
-      },
-    });
+  const confirmArchive = async () => {
+    if (!orgToArchive) return;
+    
+    const result = await archiveOrganization(orgToArchive.id);
+    if (result) {
+      notifications.show({
+        title: 'Success',
+        message: `Organization "${orgToArchive.name}" archived successfully`,
+        color: 'blue'
+      });
+      refetchActive();
+      refetchArchived();
+    }
+    setIsArchiveModalOpen(false);
+    setOrgToArchive(null);
+  };
+
+  const handleUnarchive = (org: Organization) => {
+    setOrgToArchive(org);
+    setIsUnarchiveModalOpen(true);
+  };
+
+  const confirmUnarchive = async () => {
+    if (!orgToArchive) return;
+    
+    const result = await unarchiveOrganization(orgToArchive.id);
+    if (result) {
+      notifications.show({
+        title: 'Success',
+        message: `Organization "${orgToArchive.name}" unarchived successfully`,
+        color: 'green'
+      });
+      refetchActive();
+      refetchArchived();
+    }
+    setIsUnarchiveModalOpen(false);
+    setOrgToArchive(null);
   };
 
   const handleViewDetails = (org: Organization) => {
@@ -689,6 +662,93 @@ export default function OrganizationPage() {
             </Button>
           </Group>
         </form>
+      </Modal>
+
+      {/* Archive Confirmation Modal */}
+      <Modal
+        opened={isArchiveModalOpen}
+        onClose={() => {
+          setIsArchiveModalOpen(false);
+          setOrgToArchive(null);
+        }}
+        title="Archive Organization"
+        size="md"
+      >
+        {orgToArchive && (
+          <Stack gap="md">
+            <Text size="sm">
+              Are you sure you want to archive the organization <strong>"{orgToArchive.name}"</strong>?
+            </Text>
+            <Text size="sm" c="dimmed">
+              Archiving will:
+            </Text>
+            <ul style={{ margin: '0', paddingLeft: '1.2rem' }}>
+              <li><Text size="sm" c="dimmed">Hide this organization from active listings</Text></li>
+              <li><Text size="sm" c="dimmed">Prevent new service requests from being created</Text></li>
+              <li><Text size="sm" c="dimmed">Keep all existing data and history intact</Text></li>
+            </ul>
+            <Text size="sm" c="orange" fw={500}>
+              This action can be reversed by unarchiving the organization later.
+            </Text>
+            
+            <Group justify="flex-end" mt="md">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsArchiveModalOpen(false);
+                  setOrgToArchive(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button color="orange" onClick={confirmArchive} loading={mutationLoading}>
+                Archive Organization
+              </Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
+
+      {/* Unarchive Confirmation Modal */}
+      <Modal
+        opened={isUnarchiveModalOpen}
+        onClose={() => {
+          setIsUnarchiveModalOpen(false);
+          setOrgToArchive(null);
+        }}
+        title="Unarchive Organization"
+        size="md"
+      >
+        {orgToArchive && (
+          <Stack gap="md">
+            <Text size="sm">
+              Are you sure you want to unarchive the organization <strong>"{orgToArchive.name}"</strong>?
+            </Text>
+            <Text size="sm" c="dimmed">
+              Unarchiving will:
+            </Text>
+            <ul style={{ margin: '0', paddingLeft: '1.2rem' }}>
+              <li><Text size="sm" c="dimmed">Make this organization visible in active listings</Text></li>
+              <li><Text size="sm" c="dimmed">Allow new service requests to be created</Text></li>
+              <li><Text size="sm" c="dimmed">Restore full functionality</Text></li>
+            </ul>
+            
+            <Group justify="flex-end" mt="md">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsUnarchiveModalOpen(false);
+                  setOrgToArchive(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button color="green" onClick={confirmUnarchive} loading={mutationLoading}>
+                Unarchive Organization
+              </Button>
+            </Group>
+          </Stack>
+        )}
       </Modal>
     </Stack>
     </Card>

@@ -129,11 +129,9 @@ export default function AdminLayout() {
             </Group>
           </Group>
 
-          <Menu shadow="md" width={200}>
-            <Menu.Target>
+    
               <Button
                 variant="subtle"
-                rightSection={<IconChevronDown size={16} />}
               >
                 <Group gap="xs">
                   <Avatar size="sm" color="blue">
@@ -142,26 +140,7 @@ export default function AdminLayout() {
                   <Text size="sm">{user?.name}</Text>
                 </Group>
               </Button>
-            </Menu.Target>
-
-            <Menu.Dropdown>
-              <Menu.Label>Account</Menu.Label>
-              <Menu.Item leftSection={<IconUser size={14} />}>
-                Profile
-              </Menu.Item>
-              <Menu.Item leftSection={<IconSettings size={14} />}>
-                Settings
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item
-                leftSection={<IconLogout size={14} />}
-                color="red"
-                onClick={handleLogout}
-              >
-                Logout
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+          
         </Group>
       </AppShell.Header>
 
@@ -242,19 +221,7 @@ export default function AdminLayout() {
         </Box>
 
         <Box mt="auto">
-          <NavLink
-            label="Settings"
-            className="rounded-xl m-2 font-light"
-            style={{ padding: "12px", fontSize: "18px",
-              backgroundColor: isActive("/admin/settings")
-                ? theme.colors?.primary?.[6]
-                : "transparent",
-              color: isActive("/admin/settings") ? "white" : "black",
-            }}
-            leftSection={<IconSettings size="1rem" />}
-            active={isActive("/admin/settings")}
-            onClick={() => navigate("/admin/settings")}
-          />
+       
 
           <NavLink
             label="Logout"

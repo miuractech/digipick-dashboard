@@ -76,14 +76,14 @@ export default function Dashboard() {
               leftSection={<IconAlertTriangle size={16} />}
               
             >
-              Devices Expiring Soon ({stats?.devicesExpiringInSevenDays || 0})
+              Devices AMC Expiring Soon ({stats?.devicesExpiringInSevenDays || 0})
             </Tabs.Tab>
             <Tabs.Tab 
               value="expired" 
               leftSection={<IconCalendarX size={16} />}
               color="red"
             >
-              Expired Devices ({stats?.devicesExpired || 0})
+              AMC Expired Devices ({stats?.devicesExpired || 0})
             </Tabs.Tab>
           </Tabs.List>
 

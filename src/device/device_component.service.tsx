@@ -16,17 +16,19 @@ import {
   Loader,
   Alert,
   Pagination,
+  Checkbox,
   rem
 } from '@mantine/core';
 import {
   IconPlus,
   IconEdit,
-  IconTrash,
   IconDots,
   IconSearch,
   IconCalendar,
   IconCopy,
-  IconCheck
+  IconCheck,
+  IconArchive,
+  IconRestore
 } from '@tabler/icons-react';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -45,13 +47,14 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [copiedDeviceId, setCopiedDeviceId] = useState<string | null>(null);
+  const [includeArchived, setIncludeArchived] = useState(false);
 
   const { devices, totalCount, totalPages, loading, error, refetch } = useCompanyDevices(
     companyId, 
-    { search }, 
+    { search, include_archived: includeArchived }, 
     { page, pageSize }
   );
-  const { createDevice, updateDevice, deleteDevice, loading: mutationLoading } = useDeviceMutations();
+  const { createDevice, updateDevice, archiveDevice, unarchiveDevice, loading: mutationLoading } = useDeviceMutations();
 
   const form = useForm<CreateDeviceData | UpdateDeviceData>({
     initialValues: {
@@ -68,7 +71,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
       amc_end_date: ''
     },
     validate: {
-      device_name: (value) => (!value ? 'Device name is required' : null)
+      device_name: (value: string) => (!value ? 'Device name is required' : null)
     }
   });
 
@@ -125,7 +128,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
           refetch();
         }
       }
-    } catch (error) {
+    } catch {
       notifications.show({
         title: 'Error',
         message: 'Failed to save device',
@@ -134,23 +137,41 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
     }
   };
 
-  const handleDelete = async (device: Device) => {
-    if (window.confirm(`Are you sure you want to delete device "${device.device_name}"?`)) {
-      const result = await deleteDevice(device.id);
+  const handleArchive = async (device: Device) => {
+    if (window.confirm(`Are you sure you want to archive device "${device.device_name}"?`)) {
+      const result = await archiveDevice(device.id);
       if (result) {
         notifications.show({
           title: 'Success',
-          message: 'Device deleted successfully',
+          message: 'Device archived successfully',
           color: 'green'
         });
         refetch();
       } else {
         notifications.show({
           title: 'Error',
-          message: 'Failed to delete device',
+          message: 'Failed to archive device',
           color: 'red'
         });
       }
+    }
+  };
+
+  const handleUnarchive = async (device: Device) => {
+    const result = await unarchiveDevice(device.id);
+    if (result) {
+      notifications.show({
+        title: 'Success',
+        message: 'Device unarchived successfully',
+        color: 'green'
+      });
+      refetch();
+    } else {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to unarchive device',
+        color: 'red'
+      });
     }
   };
 
@@ -184,7 +205,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
         message: `${label} copied to clipboard`,
         color: 'green'
       });
-    } catch (error) {
+    } catch {
       notifications.show({
         title: 'Error',
         message: 'Failed to copy to clipboard',
@@ -202,6 +223,12 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
     setPage(1); // Reset to first page when searching
   };
 
+  const formatDateForInput = (date: Date | string | null): string => {
+    if (!date) return '';
+    if (typeof date === 'string') return date;
+    return date.toISOString().split('T')[0];
+  };
+
   if (loading) return <Loader size="lg" style={{ display: 'block', margin: '2rem auto' }} />;
   if (error) return <Alert color="red" title="Error">{error}</Alert>;
 
@@ -216,12 +243,20 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
             </Button>
           </Group>
 
-          <TextInput
-            placeholder="Search by device name or ID..."
-            leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} />}
-            value={search}
-            onChange={(event) => handleSearchChange(event.currentTarget.value)}
-          />
+          <Group gap="md" style={{ flexWrap: 'wrap' }}>
+            <TextInput
+              placeholder="Search by device name or ID..."
+              leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} />}
+              value={search}
+              onChange={(event) => handleSearchChange(event.currentTarget.value)}
+              style={{ flex: 1, minWidth: '250px' }}
+            />
+            <Checkbox
+              label="Include archived devices"
+              checked={includeArchived}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setIncludeArchived(event.currentTarget.checked)}
+            />
+          </Group>
 
           {totalCount > 0 && (
             <Text size="sm" c="dimmed">
@@ -253,7 +288,12 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   <Table.Tr key={device.id}>
                     <Table.Td>
                       <div>
-                        <Text fw={500}>{device.device_name}</Text>
+                        <Group gap="xs">
+                          <Text fw={500}>{device.device_name}</Text>
+                          {device.archived && (
+                            <Badge color="yellow" variant="light" size="sm">Archived</Badge>
+                          )}
+                        </Group>
                         {device.serial_number && (
                           <Text size="xs" c="dimmed">SN: {device.serial_number}</Text>
                         )}
@@ -344,13 +384,23 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                           >
                             Edit
                           </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconTrash size={14} />}
-                            color="red"
-                            onClick={() => handleDelete(device)}
-                          >
-                            Delete
-                          </Menu.Item>
+                          {device.archived ? (
+                            <Menu.Item
+                              leftSection={<IconRestore size={14} />}
+                              color="green"
+                              onClick={() => handleUnarchive(device)}
+                            >
+                              Unarchive
+                            </Menu.Item>
+                          ) : (
+                            <Menu.Item
+                              leftSection={<IconArchive size={14} />}
+                              color="yellow"
+                              onClick={() => handleArchive(device)}
+                            >
+                              Archive
+                            </Menu.Item>
+                          )}
                         </Menu.Dropdown>
                       </Menu>
                     </Table.Td>
@@ -439,7 +489,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   placeholder="Select purchase date"
                   leftSection={<IconCalendar size={16} />}
                   value={form.values.purchase_date ? new Date(form.values.purchase_date) : null}
-                  onChange={(date) => form.setFieldValue('purchase_date', date?.toISOString().split('T')[0] || '')}
+                  onChange={(date) => form.setFieldValue('purchase_date', formatDateForInput(date))}
                 />
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -448,7 +498,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   placeholder="Select warranty expiry date"
                   leftSection={<IconCalendar size={16} />}
                   value={form.values.warranty_expiry_date ? new Date(form.values.warranty_expiry_date) : null}
-                  onChange={(date) => form.setFieldValue('warranty_expiry_date', date?.toISOString().split('T')[0] || '')}
+                  onChange={(date) => form.setFieldValue('warranty_expiry_date', formatDateForInput(date))}
                 />
               </Grid.Col>
             </Grid>
@@ -460,7 +510,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   placeholder="Select AMC start date"
                   leftSection={<IconCalendar size={16} />}
                   value={form.values.amc_start_date ? new Date(form.values.amc_start_date) : null}
-                  onChange={(date) => form.setFieldValue('amc_start_date', date?.toISOString().split('T')[0] || '')}
+                  onChange={(date) => form.setFieldValue('amc_start_date', formatDateForInput(date))}
                 />
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -469,7 +519,7 @@ export function DeviceManagement({ companyId }: DeviceManagementProps) {
                   placeholder="Select AMC end date"
                   leftSection={<IconCalendar size={16} />}
                   value={form.values.amc_end_date ? new Date(form.values.amc_end_date) : null}
-                  onChange={(date) => form.setFieldValue('amc_end_date', date?.toISOString().split('T')[0] || '')}
+                  onChange={(date) => form.setFieldValue('amc_end_date', formatDateForInput(date))}
                 />
               </Grid.Col>
             </Grid>
