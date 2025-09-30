@@ -104,6 +104,39 @@ export const organizationService = {
     return data;
   },
 
+  async checkEmailExists(email: string, excludeId?: string): Promise<boolean> {
+    // Check company_details table
+    let companyQuery = supabase
+      .from(TABLE_NAME)
+      .select('id')
+      .eq('email', email);
+    
+    if (excludeId) {
+      companyQuery = companyQuery.neq('id', excludeId);
+    }
+    
+    const { data: companyData, error: companyError } = await companyQuery.limit(1);
+    
+    if (companyError) throw companyError;
+    
+    // If email exists in company_details, return true
+    if (companyData && companyData.length > 0) {
+      return true;
+    }
+    
+    // Check user_tracking table
+    const { data: trackingData, error: trackingError } = await supabase
+      .from('user_tracking')
+      .select('id')
+      .eq('email', email)
+      .limit(1);
+    
+    if (trackingError) throw trackingError;
+    
+    // Return true if email exists in either table
+    return (trackingData && trackingData.length > 0);
+  },
+
   async create(organizationData: CreateOrganizationData): Promise<Organization> {
     const { data, error } = await supabase
       .from(TABLE_NAME)

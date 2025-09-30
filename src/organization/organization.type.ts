@@ -24,7 +24,7 @@ export interface CreateOrganizationData {
   gst_number?: string;
   pan_number?: string;
   cin_number?: string;
-  email?: string;
+  email: string;
   phone?: string;
   address_line1?: string;
   address_line2?: string;

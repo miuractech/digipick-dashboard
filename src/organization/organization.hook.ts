@@ -224,6 +224,19 @@ export const useOrganizationMutations = () => {
   };
 };
 
+export const useEmailValidation = () => {
+  const checkEmailExists = useCallback(async (email: string, excludeId?: string): Promise<boolean> => {
+    try {
+      return await organizationService.checkEmailExists(email, excludeId);
+    } catch (err) {
+      console.error('Error checking email existence:', err);
+      return false;
+    }
+  }, []);
+
+  return { checkEmailExists };
+};
+
 export const useOrganizationExport = () => {
   const [loading, setLoading] = useState(false);
 

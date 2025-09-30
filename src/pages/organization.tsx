@@ -23,7 +23,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconEdit, IconArchive, IconPlus, IconRestore, IconDots, IconEye, IconSearch, IconDownload, IconPrinter, IconRefresh } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
-import { usePaginatedOrganizations, useOrganizationMutations, useOrganizationExport } from '../organization/organization.hook';
+import { usePaginatedOrganizations, useOrganizationMutations, useOrganizationExport, useEmailValidation } from '../organization/organization.hook';
 import type { Organization, CreateOrganizationData } from '../organization/organization.type';
 
 export default function OrganizationPage() {
@@ -70,6 +70,7 @@ export default function OrganizationPage() {
   
   const { createOrganization, updateOrganization, archiveOrganization, unarchiveOrganization, loading: mutationLoading } = useOrganizationMutations();
   const { loading: exportLoading, exportToExcel } = useOrganizationExport();
+  const { checkEmailExists } = useEmailValidation();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
@@ -95,7 +96,11 @@ export default function OrganizationPage() {
     },
     validate: {
       name: (value) => (value.length < 2 ? 'Name must be at least 2 characters' : null),
-      email: (value) => value && !/^\S+@\S+$/.test(value) ? 'Invalid email' : null,
+      email: (value) => {
+        if (!value) return 'Email is required';
+        if (!/^\S+@\S+\.\S+$/.test(value)) return 'Invalid email format';
+        return null;
+      },
     },
   });
 
@@ -106,6 +111,13 @@ export default function OrganizationPage() {
 
   const handleSubmit = async (values: CreateOrganizationData) => {
     try {
+      // Check email uniqueness
+      const emailExists = await checkEmailExists(values.email, editingOrg?.id);
+      if (emailExists) {
+        form.setFieldError('email', 'Email already exists');
+        return;
+      }
+
       if (editingOrg) {
         const result = await updateOrganization({ ...values, id: editingOrg.id });
         if (result) {
@@ -593,6 +605,7 @@ export default function OrganizationPage() {
                 label="Email"
                 placeholder="email@example.com"
                 type="email"
+                required
                 {...form.getInputProps('email')}
               />
             </Grid.Col>
