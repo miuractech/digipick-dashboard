@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { userService } from './user.service';
 import type { 
   OrganizationUser, 
-  UserTracking, 
   CreateUserTrackingData, 
   UpdateUserDevicesData 
 } from './user.type';
@@ -49,38 +48,6 @@ export function useOrganizationUsers(
   };
 }
 
-export function usePendingInvitations(organizationId: string) {
-  const [invitations, setInvitations] = useState<UserTracking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchInvitations = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await userService.getPendingInvitations(organizationId);
-      setInvitations(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (organizationId) {
-      fetchInvitations();
-    }
-  }, [organizationId]);
-
-  return {
-    invitations,
-    loading,
-    error,
-    refetch: fetchInvitations
-  };
-}
-
 export function useUserMutations() {
   const [loading, setLoading] = useState(false);
 
@@ -123,24 +90,10 @@ export function useUserMutations() {
     }
   };
 
-  const removePendingInvitation = async (invitationId: string) => {
-    try {
-      setLoading(true);
-      await userService.removePendingInvitation(invitationId);
-      return true;
-    } catch (error) {
-      console.error('Error removing invitation:', error);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return {
     removeUser,
     updateUserDevices,
     addUser,
-    removePendingInvitation,
     loading
   };
 }

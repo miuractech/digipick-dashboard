@@ -11,30 +11,26 @@ import {
   Menu,
   TextInput,
   Modal,
-  Grid,
   Badge,
   Loader,
   Alert,
   Pagination,
   rem,
   Select,
-  MultiSelect,
-  Divider
+  MultiSelect
 } from '@mantine/core';
 import {
   IconPlus,
-  IconEdit,
   IconTrash,
   IconDots,
   IconSearch,
   IconMail,
-  IconUsers,
   IconDevices
 } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { modals } from '@mantine/modals';
-import { useOrganizationUsers, usePendingInvitations, useUserMutations } from './user.hook';
+import { useOrganizationUsers, useUserMutations } from './user.hook';
 import { useCompanyDevices } from '../device/device.hook';
 import type { OrganizationUser, CreateUserTrackingData, UpdateUserDevicesData, USER_TYPES } from './user.type';
 
@@ -61,12 +57,10 @@ export function UserManagement({ companyId }: UserManagementProps) {
     { page, pageSize }
   );
   
-  const { invitations, refetch: refetchInvitations } = usePendingInvitations(companyId);
-  
   // Get devices for the multiselect
   const { devices: allDevices } = useCompanyDevices(companyId, {}, { page: 1, pageSize: 1000 });
   
-  const { removeUser, updateUserDevices, addUser, removePendingInvitation, loading: mutationLoading } = useUserMutations();
+  const { removeUser, updateUserDevices, addUser, loading: mutationLoading } = useUserMutations();
 
   const deviceOptions = allDevices.map(device => ({
     value: device.id,
@@ -85,6 +79,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
     initialValues: {
       organization_id: companyId,
       email: '',
+      username: '',
       user_type: 'user' as USER_TYPES,
       devices: []
     },
@@ -96,7 +91,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
   const openEditModal = (user: OrganizationUser) => {
     setEditingUser(user);
     editForm.setValues({
-      user_id: user.id,
+      user_id: user.tracking_info?.tracking_id || user.id,
       organization_id: companyId,
       devices: user.user_role.devices === 'all' ? 'all' : user.user_role.devices
     });
@@ -121,7 +116,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
         setModalOpened(false);
         refetch();
       }
-    } catch (error) {
+    } catch {
       notifications.show({
         title: 'Error',
         message: 'Failed to update user devices',
@@ -141,9 +136,8 @@ export function UserManagement({ companyId }: UserManagementProps) {
         });
         setInviteModalOpened(false);
         refetch();
-        refetchInvitations();
       }
-    } catch (error) {
+    } catch {
       notifications.show({
         title: 'Error',
         message: 'Failed to send user invitation',
@@ -153,29 +147,36 @@ export function UserManagement({ companyId }: UserManagementProps) {
   };
 
   const handleRemoveUser = async (user: OrganizationUser) => {
+    const isRegistered = user.tracking_info?.is_synced;
+    const displayName = user.tracking_info?.username || user.full_name || user.email;
+    
     modals.openConfirmModal({
-      title: 'Remove User',
+      title: isRegistered ? 'Remove User' : 'Remove Invitation',
       children: (
         <Text size="sm">
-          Are you sure you want to remove <strong>{user.full_name || user.email}</strong> from this organization?
-          This will revoke their access to all devices and data.
+          Are you sure you want to remove <strong>{displayName}</strong> from this organization?
+          {isRegistered 
+            ? ' This will revoke their access to all devices and data.'
+            : ' This will cancel the pending invitation.'
+          }
         </Text>
       ),
-      labels: { confirm: 'Remove User', cancel: 'Cancel' },
+      labels: { confirm: isRegistered ? 'Remove User' : 'Remove Invitation', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
       onConfirm: async () => {
-        const result = await removeUser(user.id, companyId);
+        const trackingId = user.tracking_info?.tracking_id || user.id;
+        const result = await removeUser(trackingId, companyId);
         if (result) {
           notifications.show({
             title: 'Success',
-            message: 'User removed successfully',
+            message: isRegistered ? 'User removed successfully' : 'Invitation removed successfully',
             color: 'green'
           });
           refetch();
         } else {
           notifications.show({
             title: 'Error',
-            message: 'Failed to remove user',
+            message: isRegistered ? 'Failed to remove user' : 'Failed to remove invitation',
             color: 'red'
           });
         }
@@ -183,29 +184,6 @@ export function UserManagement({ companyId }: UserManagementProps) {
     });
   };
 
-  const handleRemoveInvitation = async (invitationId: string, email: string) => {
-    modals.openConfirmModal({
-      title: 'Remove Invitation',
-      children: (
-        <Text size="sm">
-          Are you sure you want to remove the invitation for <strong>{email}</strong>?
-        </Text>
-      ),
-      labels: { confirm: 'Remove Invitation', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
-      onConfirm: async () => {
-        const result = await removePendingInvitation(invitationId);
-        if (result) {
-          notifications.show({
-            title: 'Success',
-            message: 'Invitation removed successfully',
-            color: 'green'
-          });
-          refetchInvitations();
-        }
-      }
-    });
-  };
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -259,58 +237,6 @@ export function UserManagement({ companyId }: UserManagementProps) {
             onChange={(event) => handleSearchChange(event.currentTarget.value)}
           />
 
-          {/* Pending Invitations */}
-          {invitations.length > 0 && (
-            <>
-              <Divider label="Pending Invitations" labelPosition="left" />
-              <Table>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Email</Table.Th>
-                    <Table.Th>Role</Table.Th>
-                    <Table.Th>Device Access</Table.Th>
-                    <Table.Th>Invited</Table.Th>
-                    <Table.Th>Actions</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {invitations.map((invitation) => (
-                    <Table.Tr key={invitation.id} style={{ backgroundColor: '#fef3c7' }}>
-                      <Table.Td>
-                        <Group gap="xs">
-                          <IconMail size={16} color="orange" />
-                          <Text>{invitation.email}</Text>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>
-                        <Badge color={getUserTypeBadgeColor(invitation.user_type)} variant="light" size="sm">
-                          {invitation.user_type}
-                        </Badge>
-                      </Table.Td>
-                      <Table.Td>
-                        {formatDeviceAccess(invitation.devices)}
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm" c="dimmed">
-                          {new Date(invitation.created_at).toLocaleDateString()}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <ActionIcon 
-                          color="red" 
-                          variant="subtle"
-                          onClick={() => handleRemoveInvitation(invitation.id, invitation.email)}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-              <Divider />
-            </>
-          )}
 
           {totalCount > 0 && (
             <Text size="sm" c="dimmed">
@@ -329,65 +255,92 @@ export function UserManagement({ companyId }: UserManagementProps) {
                   <Table.Tr>
                     <Table.Th>User</Table.Th>
                     <Table.Th>Email</Table.Th>
+                    <Table.Th>Status</Table.Th>
                     <Table.Th>Role</Table.Th>
                     <Table.Th>Device Access</Table.Th>
-                    <Table.Th>Joined</Table.Th>
+                    <Table.Th>Date</Table.Th>
                     <Table.Th>Actions</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {users.map((user) => (
-                    <Table.Tr key={user.id}>
-                      <Table.Td>
-                        <div>
-                          <Text fw={500}>{user.full_name || 'Unknown'}</Text>
-                          {user.phone && (
-                            <Text size="xs" c="dimmed">{user.phone}</Text>
-                          )}
-                        </div>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text>{user.email}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Badge color={getUserTypeBadgeColor(user.user_role.user_type)} variant="light">
-                          {user.user_role.user_type}
-                        </Badge>
-                      </Table.Td>
-                      <Table.Td>
-                        {formatDeviceAccess(user.user_role.devices)}
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm" c="dimmed">
-                          {new Date(user.user_role.created_at).toLocaleDateString()}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Menu shadow="md" width={200}>
-                          <Menu.Target>
-                            <ActionIcon variant="subtle">
-                              <IconDots size={16} />
-                            </ActionIcon>
-                          </Menu.Target>
-                          <Menu.Dropdown>
-                            <Menu.Item
-                              leftSection={<IconDevices size={14} />}
-                              onClick={() => openEditModal(user)}
-                            >
-                              Edit Devices
-                            </Menu.Item>
-                            <Menu.Item
-                              leftSection={<IconTrash size={14} />}
-                              color="red"
-                              onClick={() => handleRemoveUser(user)}
-                            >
-                              Remove User
-                            </Menu.Item>
-                          </Menu.Dropdown>
-                        </Menu>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
+                  {users.map((user) => {
+                    const isRegistered = user.tracking_info?.is_synced;
+                    const displayName = user.tracking_info?.username || user.full_name || 'Unknown';
+                    
+                    return (
+                      <Table.Tr 
+                        key={user.id}
+                        style={{ 
+                          backgroundColor: isRegistered ? 'transparent' : '#fef3c7' 
+                        }}
+                      >
+                        <Table.Td>
+                          <div>
+                            <Text fw={500}>{displayName}</Text>
+                            {user.phone && isRegistered && (
+                              <Text size="xs" c="dimmed">{user.phone}</Text>
+                            )}
+                          </div>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text>{user.email}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="xs">
+                            {isRegistered ? (
+                              <Badge color="green" variant="light" size="sm">
+                                Active
+                              </Badge>
+                            ) : (
+                              <>
+                                <IconMail size={14} color="orange" />
+                                <Badge color="orange" variant="light" size="sm">
+                                  Pending
+                                </Badge>
+                              </>
+                            )}
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Badge color={getUserTypeBadgeColor(user.user_role.user_type)} variant="light">
+                            {user.user_role.user_type}
+                          </Badge>
+                        </Table.Td>
+                        <Table.Td>
+                          {formatDeviceAccess(user.user_role.devices)}
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" c="dimmed">
+                            {new Date(user.user_role.created_at).toLocaleDateString()}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Menu shadow="md" width={200}>
+                            <Menu.Target>
+                              <ActionIcon variant="subtle">
+                                <IconDots size={16} />
+                              </ActionIcon>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                              <Menu.Item
+                                leftSection={<IconDevices size={14} />}
+                                onClick={() => openEditModal(user)}
+                              >
+                                Edit Devices
+                              </Menu.Item>
+                              <Menu.Item
+                                leftSection={<IconTrash size={14} />}
+                                color="red"
+                                onClick={() => handleRemoveUser(user)}
+                              >
+                                {isRegistered ? 'Remove User' : 'Remove Invitation'}
+                              </Menu.Item>
+                            </Menu.Dropdown>
+                          </Menu>
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
                 </Table.Tbody>
               </Table>
             </div>
@@ -416,7 +369,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
         <form onSubmit={editForm.onSubmit(handleEditSubmit)}>
           <Stack gap="md">
             <Text size="sm" c="dimmed">
-              User: <strong>{editingUser?.full_name || editingUser?.email}</strong>
+              User: <strong>{editingUser?.tracking_info?.username || editingUser?.full_name || editingUser?.email}</strong>
             </Text>
 
             <Select
@@ -443,7 +396,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
               }}
             />
 
-            {Array.isArray(editForm.values.devices) && editForm.values.devices !== 'all' && (
+            {Array.isArray(editForm.values.devices) && (
               <MultiSelect
                 label="Select Devices"
                 placeholder="Choose specific devices"
@@ -483,6 +436,12 @@ export function UserManagement({ companyId }: UserManagementProps) {
               {...inviteForm.getInputProps('email')}
             />
 
+            <TextInput
+              label="Username (Optional)"
+              placeholder="Enter username"
+              {...inviteForm.getInputProps('username')}
+            />
+
             <Select
               label="Role"
               placeholder="Select user role"
@@ -515,7 +474,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
               }}
             />
 
-            {Array.isArray(inviteForm.values.devices) && inviteForm.values.devices !== 'all' && (
+            {Array.isArray(inviteForm.values.devices) && (
               <MultiSelect
                 label="Select Devices"
                 placeholder="Choose specific devices"

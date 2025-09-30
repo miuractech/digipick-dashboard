@@ -24,12 +24,18 @@ export interface UserRole {
 
 export interface OrganizationUser extends User {
   user_role: UserRole;
+  tracking_info?: {
+    username: string | null;
+    is_synced: boolean;
+    tracking_id: string;
+  };
 }
 
 export interface UserTracking {
   id: string;
   organization_id: string;
   email: string;
+  username: string | null;
   user_type: USER_TYPES;
   devices: string[] | 'all';
   added_by: string;
@@ -42,6 +48,7 @@ export interface UserTracking {
 export interface CreateUserTrackingData {
   organization_id: string;
   email: string;
+  username?: string;
   user_type: USER_TYPES;
   devices: string[] | 'all';
 }

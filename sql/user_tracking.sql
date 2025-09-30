@@ -22,6 +22,7 @@ create table if not exists public.user_tracking (
   id uuid not null default gen_random_uuid(),
   organization_id uuid not null,
   email text not null,
+  username text null, -- Optional username for the user
   user_type text not null default 'user', -- Role: 'admin', 'manager', or 'user'
   -- devices field structure same as user_role table
   devices jsonb null default '[]'::jsonb,
