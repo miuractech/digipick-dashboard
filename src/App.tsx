@@ -13,6 +13,8 @@ import { AuthProvider } from './auth/AuthContexttype';
 // Lazy load components
 const AdminLogin = lazy(() => import('./auth/AdminLogin'));
 const AdminLayout = lazy(() => import('./auth/AdminLayout'));
+const ProtectedRoute = lazy(() => import('./auth/ProtectedRoute'));
+const PublicRoute = lazy(() => import('./auth/PublicRoute'));
 const Dashboard = lazy(() => import('./pages/dashboard'));
 const Organization = lazy(() => import('./pages/organization'));
 const OrganizationDetail = lazy(() => import('./pages/organization-detail'));
@@ -41,8 +43,16 @@ function App() {
               {/* Redirect root to admin login */}
               <Route path="/" element={<Navigate to="/admin/login" replace />} />
               {/* Admin routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminLayout />}>
+              <Route path="/admin/login" element={
+                <PublicRoute>
+                  <AdminLogin />
+                </PublicRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }>
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="organization" element={<Organization />} />
                 <Route path="organization/:id" element={<OrganizationDetail />} />

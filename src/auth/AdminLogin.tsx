@@ -26,14 +26,13 @@ import {
 } from "@tabler/icons-react";
 import LOGO from "../assets/logo.svg";
 import "./AdminLogin.css";
-import { useNavigate } from "react-router-dom";
-import authService from "./authService";
+import { useAuth } from "./useAuth";
 import type { LoginCredentials } from "./auth";
 
 export default function AdminLogin() {  
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const navigate = useNavigate();
+  const { login, resetPassword } = useAuth();
   const loginForm = useForm<LoginCredentials>({
     initialValues: {
       email: "",
@@ -71,7 +70,7 @@ export default function AdminLogin() {
     loginForm.setErrors({});
 
     try {
-      const response = await authService.login(values);
+      const response = await login(values);
 
       if (response.error) {
         if (response.error.includes("Admin access only")) {
@@ -96,9 +95,8 @@ export default function AdminLogin() {
           color: "green",
           icon: <IconCheck />,
         });
-
-        navigate("/admin/dashboard");
         loginForm.setErrors({});
+        // Navigation will be handled automatically by PublicRoute
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -117,7 +115,7 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      const response = await authService.resetPassword(values);
+      const response = await resetPassword(values);
 
       if (response.success) {
         notifications.show({

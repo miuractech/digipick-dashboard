@@ -45,6 +45,7 @@ import {
 import { ServiceRequestForm } from './ServiceRequestForm';
 import { ServiceRequestDetail } from './ServiceRequestDetail';
 import { AssignEngineerModal } from './AssignEngineerModal';
+import { OrganizationSelect } from '../organization/OrganizationSelect';
 
 export const ServiceRequestComponent: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
@@ -457,6 +458,13 @@ const FiltersForm: React.FC<FiltersFormProps> = ({ initialFilters, onApply, onCl
   return (
     <form onSubmit={handleSubmit}>
       <Stack>
+        <OrganizationSelect
+          label="Organization"
+          placeholder="Search and select organization"
+          value={filters.organization_id || ''}
+          onChange={(value) => setFilters(prev => ({ ...prev, organization_id: value || undefined }))}
+          clearable
+        />
         <Select
           label="Service Type"
           placeholder="Select service type"

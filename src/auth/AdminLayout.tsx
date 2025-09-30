@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from "react";
 import {
   AppShell,
   Burger,
@@ -7,18 +6,12 @@ import {
   NavLink,
   Button,
   Avatar,
-  Menu,
   Box,
-  Center,
-  Loader,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
-  IconSettings,
   IconLogout,
-  IconUser,
-  IconChevronDown,
   IconBuilding,
   IconDevices,
   IconHome,
@@ -26,48 +19,26 @@ import {
   IconTool,
 } from "@tabler/icons-react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import authService from "./authService";
-import type { AdminUser } from "./auth";
+import { useAuth } from "./useAuth";
 import LOGO from "../assets/logo.svg";
 import { theme } from "../theme";
 
 export default function AdminLayout() {
   const [opened, { toggle }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
-  const [user, setUser] = useState<AdminUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-
-  const loadCurrentUser = useCallback(async () => {
-    try {
-      const currentUser = await authService.getCurrentUser();
-      if (!currentUser) {
-        navigate("/admin/login");
-        return;
-      }
-      setUser(currentUser);
-    } catch (error) {
-      console.error("Failed to load user:", error);
-      navigate("/admin/login");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [navigate]);
-
-  useEffect(() => {
-    loadCurrentUser();
-  }, [loadCurrentUser]);
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      await logout();
       notifications.show({
         title: "Logged Out",
         message: "You have been successfully logged out.",
         color: "blue",
       });
-      navigate("/admin/login");
+      // Navigation will be handled automatically by ProtectedRoute
     } catch (error) {
       console.error("Logout error:", error);
       notifications.show({
@@ -78,13 +49,6 @@ export default function AdminLayout() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <Center h="100vh" w="100vw">
-        <Loader size="xl" color="blue" />
-      </Center>
-    );
-  }
 
   const isActive = (path: string) => {
     return location.pathname === path;
